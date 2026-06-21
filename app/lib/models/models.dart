@@ -56,6 +56,21 @@ class SessionUser {
             j['average_maturity_days'] == null ? null : _toInt(j['average_maturity_days']),
         pastDueBalance: _toDouble(j['past_due_balance']),
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'username': username,
+        'full_name': fullName,
+        'email': email,
+        'customer_id': customerId,
+        'customer_code': customerCode,
+        'customer_title': customerTitle,
+        'role_name': roleName,
+        'balance': balance,
+        'credit_limit': creditLimit,
+        'average_maturity_days': averageMaturityDays,
+        'past_due_balance': pastDueBalance,
+      };
 }
 
 class Product {

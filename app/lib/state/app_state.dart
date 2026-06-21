@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/models.dart';
 import '../services/b2b_service.dart';
@@ -6,12 +9,42 @@ import '../services/b2b_service.dart';
 class AppState extends ChangeNotifier {
   AppState({B2bService? service}) : _service = service ?? B2bService();
 
+  static const _sessionKey = 'zen_b2b_session';
+
   final B2bService _service;
   B2bService get service => _service;
 
   SessionUser? _user;
   SessionUser? get user => _user;
   bool get isLoggedIn => _user != null;
+
+  /// Restores a persisted session (so a full-page Stripe redirect returns the
+  /// user logged in). Safe to call once at startup.
+  Future<void> restoreSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_sessionKey);
+      if (raw != null) {
+        _user = SessionUser.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+        notifyListeners();
+      }
+    } catch (_) {
+      // Ignore restore failures (e.g. unsupported platform); stay logged out.
+    }
+  }
+
+  Future<void> _persist() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_user == null) {
+        await prefs.remove(_sessionKey);
+      } else {
+        await prefs.setString(_sessionKey, jsonEncode(_user!.toJson()));
+      }
+    } catch (_) {
+      // Persistence is best-effort.
+    }
+  }
 
   final List<CartLine> _cart = [];
   List<CartLine> get cart => List.unmodifiable(_cart);
@@ -26,6 +59,7 @@ class AppState extends ChangeNotifier {
     if (user == null) return false;
     _user = user;
     notifyListeners();
+    await _persist();
     return true;
   }
 
@@ -33,6 +67,7 @@ class AppState extends ChangeNotifier {
     _user = null;
     _cart.clear();
     notifyListeners();
+    _persist();
   }
 
   void addToCart(Product product, {int qty = 1}) {

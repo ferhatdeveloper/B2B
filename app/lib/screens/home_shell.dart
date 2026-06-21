@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
 import '../theme.dart';
+import '../utils/app_location.dart';
 import 'account_screen.dart';
 import 'catalog_screen.dart';
 import 'cart_screen.dart';
@@ -33,6 +34,27 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _handlePaymentReturn());
+  }
+
+  void _handlePaymentReturn() {
+    final search = currentSearch();
+    if (!mounted) return;
+    if (search.contains('payment=success')) {
+      clearQuery();
+      setState(() => _index = 10); // Ödemelerim
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ödemeniz alındı. "Ödemelerim" listesinde görebilirsiniz.'), backgroundColor: AppColors.accent),
+      );
+    } else if (search.contains('payment=cancel')) {
+      clearQuery();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ödeme iptal edildi.')));
+    }
+  }
 
   late final List<NavItem> _items = [
     NavItem('Mağaza', 'Ana Sayfa', Icons.home_outlined, (_) => DashboardScreen(onSeeAllProducts: () => _go(1))),

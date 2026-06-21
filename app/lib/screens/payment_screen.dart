@@ -37,13 +37,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
     try {
       final app = context.read<AppState>();
       final url = await app.service.startPayment(customerId: app.user!.customerId!, amount: amount);
-      final ok = await launchUrl(Uri.parse(url), mode: LaunchMode.platformDefault, webOnlyWindowName: '_blank');
+      // Standard Stripe Checkout: full-page redirect in the same tab. The
+      // session is persisted, so the user returns logged in after payment.
+      final ok = await launchUrl(Uri.parse(url), webOnlyWindowName: '_self');
       if (!ok) throw Exception('Ödeme sayfası açılamadı.');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ödeme sayfası açıldı. İşlem sonrası "Ödemelerim"den kontrol edebilirsiniz.')),
-        );
-      }
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
     } finally {

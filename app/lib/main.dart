@@ -6,10 +6,13 @@ import 'screens/login_screen.dart';
 import 'state/app_state.dart';
 import 'theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final appState = AppState();
+  await appState.restoreSession();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState(),
+    ChangeNotifierProvider.value(
+      value: appState,
       child: const ZenB2bApp(),
     ),
   );
