@@ -143,7 +143,7 @@ app.post('/api/logo/sync', async (req, res) => {
   try {
     const client = buildLogoClient();
     const result = await syncFromLogo(client);
-    res.json({ ok: true, mode: config.logo.mock ? 'mock' : 'live', ...result });
+    res.json({ ok: true, mode: effectiveLogo().mock ? 'mock' : 'live', ...result });
   } catch (err) {
     console.error('logo sync error', err.message);
     res.status(500).json({ error: err.message });
