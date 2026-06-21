@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
 import '../config/api_config.dart';
 import '../models/models.dart';
 import 'api_client.dart';
@@ -75,18 +79,134 @@ class B2bService {
     return DashboardSummary.fromJson(rows.first);
   }
 
-  Future<List<OrderRow>> orders(String customerId, {int limit = 50}) async {
+  Future<List<OrderRow>> orders(String customerId, {int limit = 50, String? status}) async {
+    final query = <String, String>{
+      'select': 'id,order_no,status,grand_total,currency_code,note,created_at',
+      'customer_id': 'eq.$customerId',
+      'order': 'created_at.desc',
+      'limit': '$limit',
+    };
+    if (status != null) query['status'] = 'eq.$status';
+    final data = await _api.get('/orders', query: query, schema: ApiConfig.schemaPublic);
+    return (data as List).map((e) => OrderRow.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<PaymentRow>> payments(String customerId) async {
     final data = await _api.get(
-      '/orders',
+      '/payments',
       query: {
-        'select': 'id,order_no,status,grand_total,currency_code,note,created_at',
+        'select': 'payment_no,status,method,amount,currency_code,provider,paid_at,created_at',
         'customer_id': 'eq.$customerId',
         'order': 'created_at.desc',
-        'limit': '$limit',
       },
       schema: ApiConfig.schemaPublic,
     );
-    return (data as List).map((e) => OrderRow.fromJson(e as Map<String, dynamic>)).toList();
+    return (data as List).map((e) => PaymentRow.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<StatementRow>> statement(String customerId) async {
+    final data = await _api.get(
+      '/account_statement',
+      query: {
+        'select': 'txn_date,doc_no,doc_type,description,debit,credit,running_balance',
+        'customer_id': 'eq.$customerId',
+        'order': 'txn_date.asc',
+      },
+      schema: ApiConfig.schemaB2b,
+    );
+    return (data as List).map((e) => StatementRow.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<InvoiceRow>> openInvoices(String customerId) async {
+    final data = await _api.get(
+      '/open_invoices',
+      query: {'select': 'invoice_no,status,amount,currency_code,due_date', 'customer_id': 'eq.$customerId'},
+      schema: ApiConfig.schemaB2b,
+    );
+    return (data as List).map((e) => InvoiceRow.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<CheckNoteRow>> checksNotes(String customerId) async {
+    final data = await _api.get(
+      '/checks_notes',
+      query: {'select': 'document_no,document_type,status,amount,due_date', 'customer_id': 'eq.$customerId', 'order': 'due_date.asc'},
+      schema: ApiConfig.schemaPublic,
+    );
+    return (data as List).map((e) => CheckNoteRow.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<DispatchRow>> unbilledDispatches(String customerId) async {
+    final data = await _api.get(
+      '/unbilled_dispatches',
+      query: {'select': 'dispatch_no,status,amount,dispatched_at', 'customer_id': 'eq.$customerId'},
+      schema: ApiConfig.schemaB2b,
+    );
+    return (data as List).map((e) => DispatchRow.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<ShippingAddress>> shippingAddresses(String customerId) async {
+    final data = await _api.get(
+      '/shipping_addresses',
+      query: {'select': 'id,title,contact_name,phone,address_line,city,is_default', 'customer_id': 'eq.$customerId', 'order': 'is_default.desc'},
+      schema: ApiConfig.schemaPublic,
+    );
+    return (data as List).map((e) => ShippingAddress.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> addShippingAddress(String customerId, {required String title, required String addressLine, String? city, String? contactName, String? phone}) async {
+    await _api.post(
+      '/shipping_addresses',
+      {
+        'customer_id': customerId,
+        'title': title,
+        'address_line': addressLine,
+        if (city != null && city.isNotEmpty) 'city': city,
+        if (contactName != null && contactName.isNotEmpty) 'contact_name': contactName,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
+      },
+      schema: ApiConfig.schemaPublic,
+      prefer: 'return=minimal',
+    );
+  }
+
+  Future<List<Product>> favoriteProducts(String customerId) async {
+    final favs = await _api.get(
+      '/favorites',
+      query: {'select': 'product_id', 'customer_id': 'eq.$customerId'},
+      schema: ApiConfig.schemaPublic,
+    );
+    final ids = (favs as List).map((e) => e['product_id'].toString()).toList();
+    if (ids.isEmpty) return [];
+    final data = await _api.get(
+      '/product_catalog',
+      query: {'select': '*', 'id': 'in.(${ids.join(',')})', 'order': 'name.asc'},
+      schema: ApiConfig.schemaB2b,
+    );
+    return (data as List).map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  /// Creates a Stripe (or mock) checkout session via the integration server.
+  /// Returns the hosted checkout URL the client should open.
+  Future<String> startPayment({required String customerId, required double amount}) async {
+    final res = await http.post(
+      Uri.parse('${ApiConfig.integrationUrl}/api/payments/checkout'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'customer_id': customerId, 'amount': amount}),
+    );
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Ödeme başlatılamadı: ${res.statusCode} ${res.body}');
+    }
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return data['url'] as String;
+  }
+
+  /// Triggers a Logo REST → local DB sync via the integration server.
+  Future<Map<String, dynamic>> syncLogo() async {
+    final res = await http.post(Uri.parse('${ApiConfig.integrationUrl}/api/logo/sync'));
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Logo senkronu başarısız: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
   Future<List<Campaign>> campaigns() async {

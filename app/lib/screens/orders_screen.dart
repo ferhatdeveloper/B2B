@@ -7,7 +7,11 @@ import '../theme.dart';
 import '../utils/format.dart';
 
 class OrdersScreen extends StatefulWidget {
-  const OrdersScreen({super.key});
+  const OrdersScreen({super.key, this.status, this.emptyMessage = 'Henüz sipariş bulunmuyor.'});
+
+  /// Optional status filter ("pending", "completed", ...). Null = all orders.
+  final String? status;
+  final String emptyMessage;
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -24,7 +28,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   Future<List<OrderRow>> _load() {
     final app = context.read<AppState>();
-    return app.service.orders(app.user!.customerId ?? '');
+    return app.service.orders(app.user!.customerId ?? '', status: widget.status);
   }
 
   Color _statusColor(String s) => switch (s) {
@@ -51,11 +55,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
           final orders = snap.data ?? [];
           if (orders.isEmpty) {
             return ListView(
-              children: const [
-                SizedBox(height: 120),
-                Center(child: Icon(Icons.receipt_long_outlined, size: 60, color: Color(0xFFCBD5E1))),
-                SizedBox(height: 12),
-                Center(child: Text('Henüz sipariş bulunmuyor.', style: TextStyle(color: AppColors.textMuted))),
+              children: [
+                const SizedBox(height: 120),
+                const Center(child: Icon(Icons.receipt_long_outlined, size: 60, color: Color(0xFFCBD5E1))),
+                const SizedBox(height: 12),
+                Center(child: Text(widget.emptyMessage, style: const TextStyle(color: AppColors.textMuted))),
               ],
             );
           }

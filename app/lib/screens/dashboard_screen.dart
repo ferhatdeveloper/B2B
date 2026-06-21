@@ -24,6 +24,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _future = _load();
   }
 
+  bool _syncing = false;
+
+  Future<void> _syncLogo() async {
+    if (_syncing) return;
+    setState(() => _syncing = true);
+    try {
+      final res = await context.read<AppState>().service.syncLogo();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logo senkronu tamam: ${res['products']} ürün, ${res['customers']} cari (${res['mode']})')),
+        );
+        setState(() => _future = _load());
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logo senkronu başarısız: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
+
   Future<_DashboardData> _load() async {
     final app = context.read<AppState>();
     final svc = app.service;
@@ -60,7 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _HeroBanner(name: user.fullName, company: user.customerTitle ?? '-'),
+            _HeroBanner(name: user.fullName, company: user.customerTitle ?? '-', onSync: () => _syncLogo()),
             const SizedBox(height: 20),
             GridView.count(
               crossAxisCount: MediaQuery.of(context).size.width >= 1100 ? 4 : 2,
@@ -118,9 +140,10 @@ class _DashboardData {
 }
 
 class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({required this.name, required this.company});
+  const _HeroBanner({required this.name, required this.company, required this.onSync});
   final String name;
   final String company;
+  final VoidCallback onSync;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +163,17 @@ class _HeroBanner extends StatelessWidget {
                     style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 6),
                 Text(company, style: const TextStyle(color: Colors.white70, fontSize: 15)),
+                const SizedBox(height: 14),
+                OutlinedButton.icon(
+                  onPressed: onSync,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white54),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.sync, size: 18),
+                  label: const Text("Logo'dan Senkronla"),
+                ),
               ],
             ),
           ),
@@ -205,7 +239,20 @@ class _CategoryStrip extends StatelessWidget {
         itemCount: categories.length,
         separatorBuilder: (_, _) => const SizedBox(width: 14),
         itemBuilder: (_, i) {
+          const palette = [
+            [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+            [Color(0xFF06B6D4), Color(0xFF3B82F6)],
+            [Color(0xFF10B981), Color(0xFF22C55E)],
+            [Color(0xFFF59E0B), Color(0xFFF97316)],
+            [Color(0xFFEC4899), Color(0xFFF43F5E)],
+          ];
+          const icons = [
+            Icons.devices_other, Icons.checkroom, Icons.chair_outlined, Icons.handyman,
+            Icons.toys_outlined, Icons.sports_soccer, Icons.spa_outlined, Icons.menu_book,
+            Icons.local_cafe_outlined, Icons.tire_repair,
+          ];
           final c = categories[i];
+          final colors = palette[i % palette.length];
           return Column(
             children: [
               Container(
@@ -213,12 +260,10 @@ class _CategoryStrip extends StatelessWidget {
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: [
-                    AppColors.brand.withValues(alpha: 0.15),
-                    AppColors.brandAlt.withValues(alpha: 0.15),
-                  ]),
+                  gradient: LinearGradient(colors: colors),
+                  boxShadow: [BoxShadow(color: colors[0].withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 4))],
                 ),
-                child: const Icon(Icons.category_outlined, color: AppColors.brand),
+                child: Icon(icons[i % icons.length], color: Colors.white, size: 26),
               ),
               const SizedBox(height: 6),
               SizedBox(

@@ -221,3 +221,148 @@ class Announcement {
         createdAt: DateTime.tryParse(j['created_at']?.toString() ?? '') ?? DateTime.now(),
       );
 }
+
+class PaymentRow {
+  PaymentRow({
+    required this.paymentNo,
+    required this.status,
+    required this.method,
+    required this.amount,
+    required this.currencyCode,
+    required this.provider,
+    this.paidAt,
+    required this.createdAt,
+  });
+
+  final String paymentNo;
+  final String status;
+  final String method;
+  final double amount;
+  final String currencyCode;
+  final String provider;
+  final DateTime? paidAt;
+  final DateTime createdAt;
+
+  factory PaymentRow.fromJson(Map<String, dynamic> j) => PaymentRow(
+        paymentNo: j['payment_no']?.toString() ?? '',
+        status: j['status']?.toString() ?? '',
+        method: j['method']?.toString() ?? '',
+        amount: _toDouble(j['amount']),
+        currencyCode: j['currency_code']?.toString() ?? 'TRY',
+        provider: j['provider']?.toString() ?? 'manual',
+        paidAt: j['paid_at'] == null ? null : DateTime.tryParse(j['paid_at'].toString()),
+        createdAt: DateTime.tryParse(j['created_at']?.toString() ?? '') ?? DateTime.now(),
+      );
+}
+
+class InvoiceRow {
+  InvoiceRow({required this.invoiceNo, required this.status, required this.amount, required this.currencyCode, this.dueDate});
+
+  final String invoiceNo;
+  final String status;
+  final double amount;
+  final String currencyCode;
+  final DateTime? dueDate;
+
+  factory InvoiceRow.fromJson(Map<String, dynamic> j) => InvoiceRow(
+        invoiceNo: j['invoice_no']?.toString() ?? '',
+        status: j['status']?.toString() ?? '',
+        amount: _toDouble(j['amount']),
+        currencyCode: j['currency_code']?.toString() ?? 'TRY',
+        dueDate: j['due_date'] == null ? null : DateTime.tryParse(j['due_date'].toString()),
+      );
+}
+
+class CheckNoteRow {
+  CheckNoteRow({required this.documentNo, required this.documentType, required this.status, required this.amount, this.dueDate});
+
+  final String documentNo;
+  final String documentType;
+  final String status;
+  final double amount;
+  final DateTime? dueDate;
+
+  factory CheckNoteRow.fromJson(Map<String, dynamic> j) => CheckNoteRow(
+        documentNo: j['document_no']?.toString() ?? '',
+        documentType: j['document_type']?.toString() ?? '',
+        status: j['status']?.toString() ?? '',
+        amount: _toDouble(j['amount']),
+        dueDate: j['due_date'] == null ? null : DateTime.tryParse(j['due_date'].toString()),
+      );
+}
+
+class DispatchRow {
+  DispatchRow({required this.dispatchNo, required this.status, required this.amount, this.dispatchedAt});
+
+  final String dispatchNo;
+  final String status;
+  final double amount;
+  final DateTime? dispatchedAt;
+
+  factory DispatchRow.fromJson(Map<String, dynamic> j) => DispatchRow(
+        dispatchNo: j['dispatch_no']?.toString() ?? '',
+        status: j['status']?.toString() ?? '',
+        amount: _toDouble(j['amount']),
+        dispatchedAt: j['dispatched_at'] == null ? null : DateTime.tryParse(j['dispatched_at'].toString()),
+      );
+}
+
+class StatementRow {
+  StatementRow({
+    required this.txnDate,
+    required this.docNo,
+    required this.docType,
+    required this.debit,
+    required this.credit,
+    required this.runningBalance,
+    this.description,
+  });
+
+  final DateTime txnDate;
+  final String docNo;
+  final String docType;
+  final double debit;
+  final double credit;
+  final double runningBalance;
+  final String? description;
+
+  factory StatementRow.fromJson(Map<String, dynamic> j) => StatementRow(
+        txnDate: DateTime.tryParse(j['txn_date']?.toString() ?? '') ?? DateTime.now(),
+        docNo: j['doc_no']?.toString() ?? '',
+        docType: j['doc_type']?.toString() ?? '',
+        debit: _toDouble(j['debit']),
+        credit: _toDouble(j['credit']),
+        runningBalance: _toDouble(j['running_balance']),
+        description: j['description']?.toString(),
+      );
+}
+
+class ShippingAddress {
+  ShippingAddress({
+    required this.id,
+    required this.title,
+    this.contactName,
+    this.phone,
+    required this.addressLine,
+    this.city,
+    this.isDefault = false,
+  });
+
+  final String id;
+  final String title;
+  final String? contactName;
+  final String? phone;
+  final String addressLine;
+  final String? city;
+  final bool isDefault;
+
+  factory ShippingAddress.fromJson(Map<String, dynamic> j) => ShippingAddress(
+        id: j['id'].toString(),
+        title: j['title']?.toString() ?? '',
+        contactName: j['contact_name']?.toString(),
+        phone: j['phone']?.toString(),
+        addressLine: j['address_line']?.toString() ?? '',
+        city: j['city']?.toString(),
+        isDefault: _toBool(j['is_default']),
+      );
+}

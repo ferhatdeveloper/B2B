@@ -44,11 +44,13 @@ ThemeData buildAppTheme() {
     ),
     cardTheme: CardThemeData(
       color: AppColors.card,
-      elevation: 0,
+      elevation: 6,
+      shadowColor: const Color(0x14101828),
+      surfaceTintColor: Colors.transparent,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: const BorderSide(color: Color(0xFFE2E8F0)),
+        side: const BorderSide(color: Color(0xFFEEF2F7)),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
