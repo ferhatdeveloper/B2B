@@ -31,7 +31,10 @@ services:
       PGRST_DB_SCHEMAS: public,logic,b2b
       PGRST_SERVER_HOST: 0.0.0.0
       PGRST_SERVER_PORT: 3000
-      PGRST_SERVER_CORS_ALLOWED_ORIGINS: "*"
+      # NOTE: PostgREST treats PGRST_SERVER_CORS_ALLOWED_ORIGINS as a literal,
+      # comma-separated allowlist (no "*" wildcard). When unset, PostgREST is
+      # permissive and reflects the request Origin, which is what local browser
+      # dev (Flutter web on :8080, etc.) needs. So we intentionally leave it unset.
     ports:
       - "3002:3000"
 
