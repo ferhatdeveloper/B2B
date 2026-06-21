@@ -1,0 +1,16 @@
+{
+  "name": "b2b-integration-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "B2B entegrasyon servisi: Stripe odeme + Logo REST senkronizasyonu",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "stripe": "^19.1.0"
+  }
+}
