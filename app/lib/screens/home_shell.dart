@@ -13,6 +13,7 @@ import 'finance_screens.dart';
 import 'info_screens.dart';
 import 'orders_screen.dart';
 import 'payment_screen.dart';
+import 'settings_screen.dart';
 import 'shipping_screen.dart';
 import 'statement_screen.dart';
 
@@ -74,6 +75,7 @@ class _HomeShellState extends State<HomeShell> {
     NavItem('Finans', 'Faturalanmamış İrsaliyeler', Icons.local_shipping_outlined, (_) => const DispatchesScreen()),
     NavItem('Hesap', 'Sevk Adreslerim', Icons.location_on_outlined, (_) => const ShippingAddressesScreen()),
     NavItem('Hesap', 'Cari Hesap', Icons.person_outline, (_) => const AccountScreen()),
+    NavItem('Sistem', 'Ayarlar', Icons.settings_outlined, (_) => const SettingsScreen()),
   ];
 
   void _go(int i) {

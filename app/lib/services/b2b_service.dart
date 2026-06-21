@@ -209,6 +209,38 @@ class B2bService {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
+  /// Current integration settings (masked secrets) from the integration server.
+  Future<Map<String, dynamic>> getSettings() async {
+    final res = await http.get(Uri.parse('${ApiConfig.integrationUrl}/api/settings'));
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Ayarlar alınamadı: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Persists Logo REST connection settings on the integration server.
+  Future<Map<String, dynamic>> saveLogoSettings(Map<String, dynamic> body) async {
+    final res = await http.put(
+      Uri.parse('${ApiConfig.integrationUrl}/api/settings/logo'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Ayarlar kaydedilemedi: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Tests the (effective) Logo connection. Throws with the server error on failure.
+  Future<Map<String, dynamic>> testLogo() async {
+    final res = await http.post(Uri.parse('${ApiConfig.integrationUrl}/api/logo/test'));
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception(data['error']?.toString() ?? 'Logo bağlantısı başarısız (${res.statusCode})');
+    }
+    return data;
+  }
+
   Future<List<Campaign>> campaigns() async {
     final data = await _api.get(
       '/campaigns',

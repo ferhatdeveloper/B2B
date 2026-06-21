@@ -1,18 +1,19 @@
-import { config } from './config.js';
 import { pgGet, pgUpsert, pgPatch } from './postgrest.js';
 
-// Logo Object REST Service client. Talks to a real Logo LRS when LOGO_BASE_URL
+// Logo Object REST Service client. Talks to a real Logo LRS when a base URL
 // is configured, otherwise to the built-in mock server (same wire shape).
 export class LogoClient {
-  constructor({ baseUrl }) {
+  constructor({ baseUrl, clientId = '', clientSecret = '', username = 'ADMIN', password = '', firmNo = 1, periodNo = 1 }) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
+    this.creds = { clientId, clientSecret, username, password, firmNo, periodNo };
     this.token = null;
   }
 
   async authenticate() {
-    const body = config.logo.clientId
-      ? { clientId: config.logo.clientId, clientSecret: config.logo.clientSecret, firmNo: config.logo.firmNo, periodNo: config.logo.periodNo }
-      : { username: config.logo.username, password: config.logo.password, firmNo: config.logo.firmNo, periodNo: config.logo.periodNo };
+    const c = this.creds;
+    const body = c.clientId
+      ? { clientId: c.clientId, clientSecret: c.clientSecret, firmNo: c.firmNo, periodNo: c.periodNo }
+      : { username: c.username, password: c.password, firmNo: c.firmNo, periodNo: c.periodNo };
 
     const res = await fetch(`${this.baseUrl}/api/v1/token`, {
       method: 'POST',

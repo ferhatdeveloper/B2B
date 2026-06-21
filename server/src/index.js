@@ -6,6 +6,7 @@ import { pgPost, pgPatch, pgGet } from './postgrest.js';
 import { createCheckoutSession, constructWebhookEvent } from './stripe.js';
 import { LogoClient, syncFromLogo } from './logo.js';
 import { createMockLogoRouter } from './mockLogo.js';
+import { effectiveLogo, saveLogoSettings, maskedSettings } from './settings.js';
 
 const app = express();
 app.use(cors());
@@ -34,8 +35,32 @@ app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
     stripe: config.stripe.mock ? 'mock' : 'live',
-    logo: config.logo.mock ? 'mock' : 'live',
+    logo: effectiveLogo().mock ? 'mock' : 'live',
   });
+});
+
+// --- Settings ---------------------------------------------------------------
+app.get('/api/settings', (req, res) => res.json(maskedSettings()));
+
+app.put('/api/settings/logo', (req, res) => {
+  try {
+    saveLogoSettings(req.body ?? {});
+    res.json(maskedSettings());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Tests the (effective) Logo connection by attempting to authenticate.
+app.post('/api/logo/test', async (req, res) => {
+  try {
+    const client = buildLogoClient();
+    await client.authenticate();
+    const items = await client.items();
+    res.json({ ok: true, mode: effectiveLogo().mock ? 'mock' : 'live', itemCount: items.length });
+  } catch (err) {
+    res.status(502).json({ ok: false, error: err.message });
+  }
 });
 
 // --- Payments (Stripe) ------------------------------------------------------
@@ -104,12 +129,14 @@ async function markPaymentPaid(paymentNo, sessionId) {
 
 // --- Logo REST integration --------------------------------------------------
 function buildLogoClient() {
-  const baseUrl = config.logo.mock ? `http://localhost:${config.port}/mock-logo` : config.logo.baseUrl;
-  return new LogoClient({ baseUrl });
+  const logo = effectiveLogo();
+  const baseUrl = logo.mock ? `http://localhost:${config.port}/mock-logo` : logo.baseUrl;
+  return new LogoClient({ ...logo, baseUrl });
 }
 
 app.get('/api/logo/status', async (req, res) => {
-  res.json({ mode: config.logo.mock ? 'mock' : 'live', baseUrl: config.logo.mock ? '(built-in mock)' : config.logo.baseUrl });
+  const logo = effectiveLogo();
+  res.json({ mode: logo.mock ? 'mock' : 'live', baseUrl: logo.mock ? '(built-in mock)' : logo.baseUrl });
 });
 
 app.post('/api/logo/sync', async (req, res) => {
