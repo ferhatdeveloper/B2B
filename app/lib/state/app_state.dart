@@ -1,15 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/models.dart';
 import '../services/b2b_service.dart';
+import '../utils/session_store.dart';
 
 class AppState extends ChangeNotifier {
-  AppState({B2bService? service}) : _service = service ?? B2bService();
-
-  static const _sessionKey = 'zen_b2b_session';
+  AppState({B2bService? service}) : _service = service ?? B2bService() {
+    _restore();
+  }
 
   final B2bService _service;
   B2bService get service => _service;
@@ -18,31 +18,24 @@ class AppState extends ChangeNotifier {
   SessionUser? get user => _user;
   bool get isLoggedIn => _user != null;
 
-  /// Restores a persisted session (so a full-page Stripe redirect returns the
-  /// user logged in). Safe to call once at startup.
-  Future<void> restoreSession() async {
+  /// Restores a persisted session synchronously from localStorage (web) so a
+  /// full-page Stripe redirect returns the user logged in.
+  void _restore() {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_sessionKey);
-      if (raw != null) {
+      final raw = readSession();
+      if (raw != null && raw.isNotEmpty) {
         _user = SessionUser.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-        notifyListeners();
       }
     } catch (_) {
-      // Ignore restore failures (e.g. unsupported platform); stay logged out.
+      // Stay logged out on any restore failure.
     }
   }
 
-  Future<void> _persist() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (_user == null) {
-        await prefs.remove(_sessionKey);
-      } else {
-        await prefs.setString(_sessionKey, jsonEncode(_user!.toJson()));
-      }
-    } catch (_) {
-      // Persistence is best-effort.
+  void _persist() {
+    if (_user == null) {
+      clearSession();
+    } else {
+      writeSession(jsonEncode(_user!.toJson()));
     }
   }
 
@@ -58,8 +51,8 @@ class AppState extends ChangeNotifier {
     final user = await _service.login(username, password);
     if (user == null) return false;
     _user = user;
+    _persist();
     notifyListeners();
-    await _persist();
     return true;
   }
 
