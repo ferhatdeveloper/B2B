@@ -12,14 +12,34 @@ B2B bayi portalı için REST servis iskeleti. "Uygulama" Docker Compose ile çal
 
 Ayrıca `src/` altında yalnızca tip-kontrolü yapılan (çalıştırılmayan) bir TypeScript PostgREST istemcisi var.
 
-`app/` altında bu REST API'yi tüketen bir **Flutter (web)** istemci uygulaması bulunur (Zen B2B/C2C portalı): giriş, dashboard, ürün kataloğu, sepet, sipariş oluşturma, siparişler ve cari hesap ekranları.
+`app/` altında bu REST API'yi tüketen bir **Flutter (web)** istemci uygulaması bulunur (Zen B2B/C2C portalı): giriş, dashboard, ürün kataloğu, favoriler, kampanyalar, duyurular, sepet/sipariş, bekleyen/önceki siparişler, ödeme (Stripe), ödemelerim, cari ekstre, ödenmemiş faturalar, çek/senet, faturalanmamış irsaliyeler, sevk adresleri ve cari hesap ekranları.
+
+`server/` altında bir **Node/Express entegrasyon servisi** bulunur (port 4000): Stripe ödeme (Checkout) ve **Logo Object REST Service** senkronizasyonu (ürün/cari). Gerçek `STRIPE_SECRET_KEY` / `LOGO_BASE_URL` verilmezse otomatik **mock modda** çalışır (yerelde uçtan uca demo için).
 
 ### Flutter uygulaması (`app/`)
 - Flutter SDK `/opt/flutter-sdk/bin` altındadır ve `~/.bashrc` ile PATH'e eklenmiştir; web hedefi etkindir (`flutter config --enable-web`). Android/Linux-desktop toolchain'leri kurulu DEĞİLDİR; sadece **web** (Chrome) hedefi çalışır.
 - Geliştirme sunucusu: `cd app && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0 --dart-define=POSTGREST_URL=http://localhost:3002`. Tarayıcıda `http://localhost:8080`.
 - API tabanı `POSTGREST_URL` dart-define ile verilir (varsayılan `http://localhost:3002`, bkz. `app/lib/config/api_config.dart`).
+- API tabanları derleme zamanı define'larıyla geçilir: `--dart-define=POSTGREST_URL=http://localhost:3002 --dart-define=INTEGRATION_URL=http://localhost:4000`.
 - Lint/analiz: `cd app && flutter analyze`. Test: `cd app && flutter test`.
 - İlk web derlemesi (debug) 20-40 sn sürebilir; ilk açılışta beyaz ekran görürseniz bekleyin veya bir kez hard-refresh (Ctrl+Shift+R) yapın.
+- **Gotcha (boş/beyaz ekran):** Çok sayıda yeniden başlatma / paket ekleme sonrası Flutter web debug **DDC build önbelleği bayatlayıp** konsolda hata olmadan boş sayfa sunabilir. Çözüm: `flutter run`'ı durdurun, `cd app && rm -rf build .dart_tool/flutter_build` ile önbelleği silip yeniden başlatın (gerekirse tarayıcıyı hard-refresh). Yeni paket eklenince (pub add) dev sunucusunu tamamen yeniden başlatın; hot reload yeni bağımlılığı/asseti almaz.
+- Web renderer CanvasKit'tir ve Flutter tarafından `/canvaskit/` üzerinden yerelden sunulur (harici CDN gerekmez).
+
+### Entegrasyon servisi (`server/`) — Stripe + Logo
+- Çalıştırma: `cd server && npm start` (veya `npm run dev`). Port 4000. PostgREST'e `POSTGREST_URL` (vars. `http://localhost:3002`) üzerinden yazar.
+- Sağlık: `GET /api/health` → `{stripe: mock|live, logo: mock|live}`.
+- **Logo:** `POST /api/logo/sync` ürün/cari çeker ve PostgREST tablolarına yazar (`products.source='logo'`). `LOGO_BASE_URL` verilmezse dahili mock Logo (`/mock-logo/api/v1`) kullanılır. Gerçek bağlantı için secret'lar: `LOGO_BASE_URL`, `LOGO_CLIENT_ID`/`LOGO_CLIENT_SECRET` (veya `LOGO_USERNAME`/`LOGO_PASSWORD`), `LOGO_FIRM_NO`, `LOGO_PERIOD_NO`. LRS endpoint deseni: `POST /api/v1/token` → bearer; `GET /api/v1/items|arps|inventories`.
+- **Stripe:** `POST /api/payments/checkout {customer_id,amount}` → Checkout URL döner; başarıda webhook/redirect ödemeyi `approved` yapıp cari harekete `Tahsilat` ekler. `STRIPE_SECRET_KEY` yoksa mock akış (`/api/payments/mock-complete`) ile uçtan uca çalışır. Gerçek için secret'lar: `STRIPE_SECRET_KEY` (test `sk_test_...`), `STRIPE_WEBHOOK_SECRET`, ve `PUBLIC_APP_URL` (başarı/iptal dönüş adresi, vars. `http://localhost:8080`).
+- Stripe Checkout tam-sayfa yönlendirme kullanır; Flutter SPA oturumu `localStorage`'da saklanır (`utils/session_store_web.dart`) ki ödemeden dönünce kullanıcı giriş yapmış kalsın.
+
+### Şema (migration'lar)
+- `database/migrations/` sırayla uygulanır: `000` temel şema+seed, `001` anon+`verify_login`, `002` genişletilmiş yapılar (dispatches/irsaliye, account_transactions + `b2b.account_statement` view, favorites, payments Stripe alanları, `products/customers.source`). Değişiklik sonrası yeniden uygulamak için `sudo docker compose down -v && up -d`.
+
+### Tüm yığını çalıştırma sırası
+1. `sudo dockerd &` (systemd yok) → `sudo docker compose up -d` (postgres+postgrest).
+2. `cd server && npm start` (entegrasyon servisi, :4000).
+3. `cd app && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0 --dart-define=POSTGREST_URL=http://localhost:3002 --dart-define=INTEGRATION_URL=http://localhost:4000` → tarayıcı `http://localhost:8080` (demo/1234).
 
 ### Running services (Docker daemon must be started first)
 - `systemd` bu ortamda çalışmaz; Docker daemon'ı manuel başlatın: arka planda `sudo dockerd` (örn. bir tmux oturumunda). Konteyner/daemon komutları `sudo` gerektirir.
