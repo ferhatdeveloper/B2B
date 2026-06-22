@@ -12,7 +12,11 @@ B2B bayi portalı için REST servis iskeleti. "Uygulama" Docker Compose ile çal
 
 Ayrıca `src/` altında yalnızca tip-kontrolü yapılan (çalıştırılmayan) bir TypeScript PostgREST istemcisi var.
 
-`app/` altında bu REST API'yi tüketen bir **Flutter (web)** istemci uygulaması bulunur (Zen B2B/C2C portalı): giriş, dashboard, ürün kataloğu, favoriler, kampanyalar, duyurular, sepet/sipariş, bekleyen/önceki siparişler, ödeme (Stripe), ödemelerim, cari ekstre, ödenmemiş faturalar, çek/senet, faturalanmamış irsaliyeler, sevk adresleri ve cari hesap ekranları.
+`app/` altında bu REST API'yi tüketen bir **Flutter (web)** istemci uygulaması bulunur. İki deneyim içerir:
+- **E-ticaret sitesi (storefront)** — herkese açık, misafir alışveriş (`app/lib/storefront/`). Varsayılan açılış budur; siparişler `retail` carisine `channel='storefront'` ile yazılır. 3 tema: Minimal / Modern / Bold (sağ üstteki palet ikonu veya Ayarlar'dan seçilir). Sağ üstte **"Bayi Girişi"** bayi paneline götürür.
+- **Bayi paneli (panel)** — giriş gerektirir: dashboard, ürün kataloğu, favoriler, kampanyalar, duyurular, sepet/sipariş, bekleyen/önceki siparişler, ödeme (Stripe), ödemelerim, cari ekstre, ödenmemiş faturalar, çek/senet, faturalanmamış irsaliyeler, sevk adresleri, cari hesap, **Ayarlar**.
+
+Açılış modu (E-ticaret/Panel) ve storefront teması **Ayarlar › Site Görünümü**'nden seçilir ve `localStorage`'da saklanır (`AppState.appMode`/`storeTheme`). Giriş yapan kullanıcı paneli, misafir ise storefront'u görür; panelden "E-ticaret sitesini önizle" ile storefront önizlenebilir.
 
 `server/` altında bir **Node/Express entegrasyon servisi** bulunur (port 4000): Stripe ödeme (Checkout) ve **Logo Object REST Service** senkronizasyonu (ürün/cari). Gerçek `STRIPE_SECRET_KEY` / `LOGO_BASE_URL` verilmezse otomatik **mock modda** çalışır (yerelde uçtan uca demo için).
 
