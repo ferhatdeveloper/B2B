@@ -13,7 +13,7 @@ B2B bayi portalı için REST servis iskeleti. "Uygulama" Docker Compose ile çal
 Ayrıca `src/` altında yalnızca tip-kontrolü yapılan (çalıştırılmayan) bir TypeScript PostgREST istemcisi var.
 
 `app/` altında bu REST API'yi tüketen bir **Flutter (web)** istemci uygulaması bulunur. İki deneyim içerir:
-- **E-ticaret sitesi (storefront)** — herkese açık, misafir alışveriş (`app/lib/storefront/`). Varsayılan açılış budur; siparişler `retail` carisine `channel='storefront'` ile yazılır. 3 tema: Minimal / Modern / Bold (sağ üstteki palet ikonu veya Ayarlar'dan seçilir). Sağ üstte **"Bayi Girişi"** bayi paneline götürür.
+- **E-ticaret sitesi (storefront)** — herkese açık, misafir alışveriş (`app/lib/storefront/`). Varsayılan açılış budur; siparişler `retail` carisine `channel='storefront'` ile yazılır. 4 tema: **Zetem** (varsayılan, zetem.co.uk tarzı temiz cyan B2B), Minimal, Modern, Bold (sağ üstteki palet ikonu veya Ayarlar'dan seçilir). İki katmanlı header (üst destek/Bayi Girişi barı + logo/arama/sepet) + kategori nav + hero + kategori kartları + ürün grid + üç sütun footer. Sağ üstte **"Bayi Girişi"** bayi paneline götürür.
 - **Bayi paneli (panel)** — giriş gerektirir: dashboard, ürün kataloğu, favoriler, kampanyalar, duyurular, sepet/sipariş, bekleyen/önceki siparişler, ödeme (Stripe), ödemelerim, cari ekstre, ödenmemiş faturalar, çek/senet, faturalanmamış irsaliyeler, sevk adresleri, cari hesap, **Ayarlar**.
 
 Açılış modu (E-ticaret/Panel) ve storefront teması **Ayarlar › Site Görünümü**'nden seçilir ve `localStorage`'da saklanır (`AppState.appMode`/`storeTheme`). Giriş yapan kullanıcı paneli, misafir ise storefront'u görür; panelden "E-ticaret sitesini önizle" ile storefront önizlenebilir.
