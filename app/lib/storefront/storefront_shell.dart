@@ -200,20 +200,22 @@ class _StoreHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = context.read<AppState>();
-    final wide = MediaQuery.of(context).size.width >= 760;
+    final width = MediaQuery.of(context).size.width;
+    final showSearch = width >= 900;
+    final compactDealer = width < 620;
     final fg = t.headerFg;
     return Material(
       color: t.headerBg,
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
             Icon(Icons.shopping_bag, color: t.darkHeader ? t.headerFg : t.accent),
             const SizedBox(width: 8),
             Text('ZenShop', style: TextStyle(color: fg, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
-            const SizedBox(width: 20),
-            if (wide)
+            if (showSearch) ...[
+              const SizedBox(width: 20),
               Expanded(
                 child: SizedBox(
                   height: 42,
@@ -231,38 +233,34 @@ class _StoreHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-              )
-            else
+              ),
+            ] else
               const Spacer(),
-            const SizedBox(width: 12),
-            // Theme switcher (quick demo of multiple designs).
             PopupMenuButton<StoreTheme>(
               tooltip: 'Tema',
               icon: Icon(Icons.palette_outlined, color: fg),
               onSelected: app.setStoreTheme,
               itemBuilder: (_) => [
-                for (final th in StoreTheme.values)
-                  PopupMenuItem(value: th, child: Text(storeThemeData(th).label)),
+                for (final th in StoreTheme.values) PopupMenuItem(value: th, child: Text(storeThemeData(th).label)),
               ],
             ),
             IconButton(
               onPressed: onCart,
               icon: Badge(label: Text('$cartCount'), isLabelVisible: cartCount > 0, child: Icon(Icons.shopping_cart_outlined, color: fg)),
             ),
-            const SizedBox(width: 4),
-            if (isPreview)
-              OutlinedButton.icon(
-                onPressed: () => app.exitStorefrontPreview(),
-                style: OutlinedButton.styleFrom(foregroundColor: fg, side: BorderSide(color: fg.withValues(alpha: 0.5))),
-                icon: const Icon(Icons.dashboard, size: 18),
-                label: const Text('Panele Dön'),
+            const SizedBox(width: 2),
+            if (compactDealer)
+              IconButton(
+                tooltip: isPreview ? 'Panele Dön' : 'Bayi Girişi',
+                onPressed: () => isPreview ? app.exitStorefrontPreview() : app.requestDealerLogin(),
+                icon: Icon(isPreview ? Icons.dashboard : Icons.store_mall_directory, color: fg),
               )
             else
               OutlinedButton.icon(
-                onPressed: () => app.requestDealerLogin(),
+                onPressed: () => isPreview ? app.exitStorefrontPreview() : app.requestDealerLogin(),
                 style: OutlinedButton.styleFrom(foregroundColor: fg, side: BorderSide(color: fg.withValues(alpha: 0.5))),
-                icon: const Icon(Icons.store_mall_directory, size: 18),
-                label: const Text('Bayi Girişi'),
+                icon: Icon(isPreview ? Icons.dashboard : Icons.store_mall_directory, size: 18),
+                label: Text(isPreview ? 'Panele Dön' : 'Bayi Girişi'),
               ),
           ],
         ),
