@@ -128,10 +128,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
               ],
-              const Text('Tekrar hoş geldiniz',
+              if (context.read<AppState>().appMode == AppMode.storefront)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TextButton.icon(
+                    onPressed: () => context.read<AppState>().backToStorefront(),
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text('Mağazaya dön'),
+                  ),
+                ),
+              const Text('Bayi Girişi',
                   style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
-              const Text('Devam etmek için giriş yapın', style: TextStyle(color: AppColors.textMuted)),
+              const Text('Bayi paneline devam etmek için giriş yapın', style: TextStyle(color: AppColors.textMuted)),
               const SizedBox(height: 28),
               TextField(
                 controller: _username,

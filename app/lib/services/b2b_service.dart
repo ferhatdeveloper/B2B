@@ -267,11 +267,24 @@ class B2bService {
     return (data as List).map((e) => Announcement.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  Future<String?> retailCustomerId() async {
+    final rows = await _api.get(
+      '/customers',
+      query: {'select': 'id', 'code': 'eq.retail'},
+      schema: ApiConfig.schemaPublic,
+    );
+    final list = (rows as List);
+    return list.isEmpty ? null : list.first['id'].toString();
+  }
+
   /// Creates an order header + lines and returns the generated order_no.
   Future<String> createOrder({
     required String customerId,
     required List<CartLine> lines,
     String? note,
+    String channel = 'b2b',
+    String? buyerName,
+    String? buyerEmail,
   }) async {
     double subtotal = 0, tax = 0, grand = 0;
     for (final l in lines) {
@@ -280,18 +293,22 @@ class B2bService {
       grand += l.total;
     }
 
-    final orderNo = 'WEB-${DateTime.now().millisecondsSinceEpoch}';
+    final prefix = channel == 'storefront' ? 'SHOP' : 'WEB';
+    final orderNo = '$prefix-${DateTime.now().millisecondsSinceEpoch}';
     final created = await _api.post(
       '/orders',
       {
         'order_no': orderNo,
         'customer_id': customerId,
         'status': 'open',
+        'channel': channel,
         'subtotal': subtotal,
         'discount_total': 0,
         'tax_total': tax,
         'grand_total': grand,
         if (note != null && note.isNotEmpty) 'note': note,
+        if (buyerName != null && buyerName.isNotEmpty) 'buyer_name': buyerName,
+        if (buyerEmail != null && buyerEmail.isNotEmpty) 'buyer_email': buyerEmail,
       },
       schema: ApiConfig.schemaPublic,
     );

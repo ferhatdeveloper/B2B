@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'screens/home_shell.dart';
 import 'screens/login_screen.dart';
 import 'state/app_state.dart';
+import 'storefront/storefront_shell.dart';
 import 'theme.dart';
 
 void main() {
@@ -25,7 +26,11 @@ class ZenB2bApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: Consumer<AppState>(
-        builder: (context, app, _) => app.isLoggedIn ? const HomeShell() : const LoginScreen(),
+        builder: (context, app, _) {
+          if (app.showStorefront) return const StorefrontShell();
+          if (app.isLoggedIn) return const HomeShell();
+          return const LoginScreen();
+        },
       ),
     );
   }

@@ -1,5 +1,5 @@
-String? _mem;
+final Map<String, String> _mem = {};
 
-String? readSession() => _mem;
-void writeSession(String value) => _mem = value;
-void clearSession() => _mem = null;
+String? readKey(String key) => _mem[key];
+void writeKey(String key, String value) => _mem[key] = value;
+void removeKey(String key) => _mem.remove(key);

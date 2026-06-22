@@ -6,10 +6,19 @@ import '../models/models.dart';
 import '../services/b2b_service.dart';
 import '../utils/session_store.dart';
 
+/// Which experience the app boots into.
+enum AppMode { storefront, panel }
+
+/// Storefront visual themes (inspired by popular ecommerce templates).
+enum StoreTheme { minimal, modern, bold }
+
 class AppState extends ChangeNotifier {
   AppState({B2bService? service}) : _service = service ?? B2bService() {
     _restore();
   }
+
+  static const _modeKey = 'zen_b2b_appmode';
+  static const _themeKey = 'zen_b2b_store_theme';
 
   final B2bService _service;
   B2bService get service => _service;
@@ -17,6 +26,54 @@ class AppState extends ChangeNotifier {
   SessionUser? _user;
   SessionUser? get user => _user;
   bool get isLoggedIn => _user != null;
+
+  // --- Storefront vs panel routing -----------------------------------------
+  AppMode _appMode = AppMode.storefront;
+  AppMode get appMode => _appMode;
+
+  StoreTheme _storeTheme = StoreTheme.modern;
+  StoreTheme get storeTheme => _storeTheme;
+
+  bool _dealerLoginRequested = false;
+  bool _storefrontPreview = false;
+
+  /// True when the public storefront should be shown right now.
+  bool get showStorefront =>
+      _storefrontPreview || (!isLoggedIn && _appMode == AppMode.storefront && !_dealerLoginRequested);
+
+  void setAppMode(AppMode mode) {
+    _appMode = mode;
+    writeKey(_modeKey, mode.name);
+    notifyListeners();
+  }
+
+  void setStoreTheme(StoreTheme theme) {
+    _storeTheme = theme;
+    writeKey(_themeKey, theme.name);
+    notifyListeners();
+  }
+
+  void requestDealerLogin() {
+    _dealerLoginRequested = true;
+    _storefrontPreview = false;
+    notifyListeners();
+  }
+
+  void backToStorefront() {
+    _dealerLoginRequested = false;
+    _storefrontPreview = false;
+    notifyListeners();
+  }
+
+  void previewStorefront() {
+    _storefrontPreview = true;
+    notifyListeners();
+  }
+
+  void exitStorefrontPreview() {
+    _storefrontPreview = false;
+    notifyListeners();
+  }
 
   /// Restores a persisted session synchronously from localStorage (web) so a
   /// full-page Stripe redirect returns the user logged in.
@@ -26,8 +83,15 @@ class AppState extends ChangeNotifier {
       if (raw != null && raw.isNotEmpty) {
         _user = SessionUser.fromJson(jsonDecode(raw) as Map<String, dynamic>);
       }
+      final mode = readKey(_modeKey);
+      if (mode == AppMode.panel.name) _appMode = AppMode.panel;
+      if (mode == AppMode.storefront.name) _appMode = AppMode.storefront;
+      final theme = readKey(_themeKey);
+      for (final t in StoreTheme.values) {
+        if (t.name == theme) _storeTheme = t;
+      }
     } catch (_) {
-      // Stay logged out on any restore failure.
+      // Stay logged out / defaults on any restore failure.
     }
   }
 
@@ -51,6 +115,8 @@ class AppState extends ChangeNotifier {
     final user = await _service.login(username, password);
     if (user == null) return false;
     _user = user;
+    _dealerLoginRequested = false;
+    _storefrontPreview = false;
     _persist();
     notifyListeners();
     return true;
@@ -59,6 +125,8 @@ class AppState extends ChangeNotifier {
   void logout() {
     _user = null;
     _cart.clear();
+    _storefrontPreview = false;
+    _dealerLoginRequested = false;
     notifyListeners();
     _persist();
   }
@@ -104,6 +172,24 @@ class AppState extends ChangeNotifier {
       customerId: user.customerId!,
       lines: List.of(_cart),
       note: note,
+    );
+    _cart.clear();
+    notifyListeners();
+    return orderNo;
+  }
+
+  /// Guest (retail) checkout from the public storefront.
+  Future<String> checkoutGuest({required String name, required String email}) async {
+    if (_cart.isEmpty) throw Exception('Sepet boş.');
+    final retailId = await _service.retailCustomerId();
+    if (retailId == null) throw Exception('Perakende cari bulunamadı.');
+    final orderNo = await _service.createOrder(
+      customerId: retailId,
+      lines: List.of(_cart),
+      channel: 'storefront',
+      buyerName: name,
+      buyerEmail: email,
+      note: 'Misafir sipariş · $name <$email>',
     );
     _cart.clear();
     notifyListeners();

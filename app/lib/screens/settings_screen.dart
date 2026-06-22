@@ -156,6 +156,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _StatusBanner(logoMode: mode, stripeMode: stripeMode),
               const SizedBox(height: 16),
+              _AppearanceCard(),
+              const SizedBox(height: 16),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -288,6 +290,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       );
+}
+
+class _AppearanceCard extends StatelessWidget {
+  String _themeLabel(StoreTheme t) => switch (t) {
+        StoreTheme.minimal => 'Minimal',
+        StoreTheme.modern => 'Modern',
+        StoreTheme.bold => 'Bold',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: const [
+                Icon(Icons.devices_outlined, color: AppColors.brand),
+                SizedBox(width: 10),
+                Text('Site Görünümü', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text('Açılışta hangi deneyimin yükleneceğini ve e-ticaret temasını seçin.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+            const SizedBox(height: 16),
+            const Text('Varsayılan açılış', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            SegmentedButton<AppMode>(
+              segments: const [
+                ButtonSegment(value: AppMode.storefront, label: Text('E-Ticaret Sitesi'), icon: Icon(Icons.storefront)),
+                ButtonSegment(value: AppMode.panel, label: Text('Bayi Paneli'), icon: Icon(Icons.dashboard)),
+              ],
+              selected: {app.appMode},
+              onSelectionChanged: (s) => context.read<AppState>().setAppMode(s.first),
+            ),
+            const SizedBox(height: 18),
+            const Text('E-ticaret teması', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                for (final th in StoreTheme.values)
+                  ChoiceChip(
+                    label: Text(_themeLabel(th)),
+                    selected: app.storeTheme == th,
+                    onSelected: (_) => context.read<AppState>().setStoreTheme(th),
+                    selectedColor: AppColors.brand,
+                    labelStyle: TextStyle(color: app.storeTheme == th ? Colors.white : const Color(0xFF334155), fontWeight: FontWeight.w600),
+                    showCheckmark: false,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => context.read<AppState>().previewStorefront(),
+              icon: const Icon(Icons.visibility_outlined),
+              label: const Text('E-ticaret sitesini önizle'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _StatusBanner extends StatelessWidget {
