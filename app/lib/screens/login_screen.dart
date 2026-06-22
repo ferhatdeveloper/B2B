@@ -76,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Icon(Icons.storefront, color: Colors.white, size: 34),
                   SizedBox(width: 12),
                   Flexible(
-                    child: Text('Zen B2B/C2C',
+                    child: Text('EXFIN B2B',
                         style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800)),
                   ),
                 ],
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: const [
                     Icon(Icons.storefront, color: AppColors.brand, size: 30),
                     SizedBox(width: 10),
-                    Text('Zen B2B/C2C', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                    Text('EXFIN B2B', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                   ],
                 ),
                 const SizedBox(height: 24),

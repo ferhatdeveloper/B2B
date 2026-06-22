@@ -10,15 +10,15 @@ import '../utils/session_store.dart';
 enum AppMode { storefront, panel }
 
 /// Storefront visual themes (inspired by popular ecommerce templates).
-enum StoreTheme { minimal, modern, bold }
+enum StoreTheme { zetem, minimal, modern, bold }
 
 class AppState extends ChangeNotifier {
   AppState({B2bService? service}) : _service = service ?? B2bService() {
     _restore();
   }
 
-  static const _modeKey = 'zen_b2b_appmode';
-  static const _themeKey = 'zen_b2b_store_theme';
+  static const _modeKey = 'exfin_b2b_appmode';
+  static const _themeKey = 'exfin_b2b_store_theme';
 
   final B2bService _service;
   B2bService get service => _service;
@@ -31,7 +31,7 @@ class AppState extends ChangeNotifier {
   AppMode _appMode = AppMode.storefront;
   AppMode get appMode => _appMode;
 
-  StoreTheme _storeTheme = StoreTheme.modern;
+  StoreTheme _storeTheme = StoreTheme.zetem;
   StoreTheme get storeTheme => _storeTheme;
 
   bool _dealerLoginRequested = false;

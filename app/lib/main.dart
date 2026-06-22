@@ -22,7 +22,7 @@ class ZenB2bApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Zen B2B/C2C',
+      title: 'EXFIN B2B',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: Consumer<AppState>(

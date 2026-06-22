@@ -7,7 +7,7 @@ void writeKey(String key, String value) => impl.writeKey(key, value);
 void removeKey(String key) => impl.removeKey(key);
 
 // Session convenience wrappers.
-const _sessionKey = 'zen_b2b_session';
+const _sessionKey = 'exfin_b2b_session';
 String? readSession() => readKey(_sessionKey);
 void writeSession(String value) => writeKey(_sessionKey, value);
 void clearSession() => removeKey(_sessionKey);

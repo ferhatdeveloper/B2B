@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Modern, marketplace-style theme for the Zen B2B/C2C portal.
+/// Modern, marketplace-style theme for the EXFIN B2B portal.
 /// Improves on the reference portal with a cleaner palette, softer surfaces,
 /// rounded cards and a vibrant indigo→violet brand accent.
 class AppColors {

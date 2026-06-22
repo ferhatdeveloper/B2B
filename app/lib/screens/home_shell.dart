@@ -175,7 +175,7 @@ class _NavList extends StatelessWidget {
               children: const [
                 Icon(Icons.storefront, color: Colors.white, size: 24),
                 SizedBox(width: 10),
-                Text('Zen B2B/C2C', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
+                Text('EXFIN B2B', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
               ],
             ),
           ),

@@ -7,7 +7,8 @@ import '../utils/format.dart';
 import 'storefront_theme.dart';
 
 /// Public e-commerce storefront (B2C/C2C). Guests can browse and place orders.
-/// A "Bayi Girişi" action in the header switches to the dealer panel login.
+/// Layout inspired by clean B2B supply stores (e.g. zetem.co.uk): two-tier
+/// header, category strip, product grid, three-column footer.
 class StorefrontShell extends StatefulWidget {
   const StorefrontShell({super.key});
 
@@ -55,23 +56,21 @@ class _StorefrontShellState extends State<StorefrontShell> {
     final app = context.watch<AppState>();
     final t = storeThemeData(app.storeTheme);
     final width = MediaQuery.of(context).size.width;
-    final cols = width >= 1300 ? 5 : width >= 1000 ? 4 : width >= 680 ? 3 : 2;
+    final cols = width >= 1280 ? 5 : width >= 1000 ? 4 : width >= 680 ? 3 : 2;
 
     return Scaffold(
       backgroundColor: t.scaffoldBg,
       body: Column(
         children: [
-          _StoreHeader(
-            t: t,
-            cartCount: app.cartCount,
-            searchCtrl: _searchCtrl,
-            onSearch: (v) {
-              _search = v.trim();
-              _refresh();
-            },
-            onCart: () => _openCart(context, t),
-            isPreview: app.isLoggedIn,
-          ),
+          _UtilityBar(t: t, isPreview: app.isLoggedIn),
+          _MainHeader(t: t, cartCount: app.cartCount, searchCtrl: _searchCtrl, onSearch: (v) {
+            _search = v.trim();
+            _refresh();
+          }, onCart: () => _openCart(context, t)),
+          _CategoryBar(t: t, categories: _categories, selected: _categorySlug, onSelect: (s) {
+            setState(() => _categorySlug = s);
+            _refresh();
+          }),
           Expanded(
             child: FutureBuilder<List<Product>>(
               future: _future,
@@ -84,28 +83,35 @@ class _StorefrontShellState extends State<StorefrontShell> {
                 return CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(child: _Hero(t: t)),
-                    SliverToBoxAdapter(child: _CategoryBar(t: t, categories: _categories, selected: _categorySlug, onSelect: (s) {
-                      setState(() => _categorySlug = s);
-                      _refresh();
-                    })),
+                    if (_categories.isNotEmpty && _categorySlug == null && _search.isEmpty)
+                      SliverToBoxAdapter(child: _CategoryCards(t: t, categories: _categories, onSelect: (s) {
+                        setState(() => _categorySlug = s);
+                        _refresh();
+                      })),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-                        child: Text(_categorySlug == null && _search.isEmpty ? 'Tüm Ürünler' : 'Sonuçlar',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                        padding: const EdgeInsets.fromLTRB(24, 18, 24, 4),
+                        child: Row(
+                          children: [
+                            Text(_categorySlug == null && _search.isEmpty ? 'Öne Çıkan Ürünler' : 'Ürünler',
+                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                            const Spacer(),
+                            Text('${products.length} ürün', style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+                          ],
+                        ),
                       ),
                     ),
                     if (products.isEmpty)
-                      const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(40), child: Center(child: Text('Ürün bulunamadı.'))))
+                      const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(48), child: Center(child: Text('Ürün bulunamadı.'))))
                     else
                       SliverPadding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(24),
                         sliver: SliverGrid(
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: cols,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: 0.64,
+                            mainAxisSpacing: 18,
+                            crossAxisSpacing: 18,
+                            childAspectRatio: 0.62,
                           ),
                           delegate: SliverChildBuilderDelegate(
                             (_, i) => _StoreProductCard(t: t, product: products[i], onTap: () => _quickView(context, t, products[i])),
@@ -113,7 +119,7 @@ class _StorefrontShellState extends State<StorefrontShell> {
                           ),
                         ),
                       ),
-                    SliverToBoxAdapter(child: _Footer(t: t)),
+                    SliverToBoxAdapter(child: _Footer(t: t, categories: _categories)),
                   ],
                 );
               },
@@ -188,118 +194,108 @@ class _StorefrontShellState extends State<StorefrontShell> {
   }
 }
 
-class _StoreHeader extends StatelessWidget {
-  const _StoreHeader({required this.t, required this.cartCount, required this.searchCtrl, required this.onSearch, required this.onCart, required this.isPreview});
+class _UtilityBar extends StatelessWidget {
+  const _UtilityBar({required this.t, required this.isPreview});
   final StoreThemeData t;
-  final int cartCount;
-  final TextEditingController searchCtrl;
-  final ValueChanged<String> onSearch;
-  final VoidCallback onCart;
   final bool isPreview;
 
   @override
   Widget build(BuildContext context) {
     final app = context.read<AppState>();
+    final bar = t.darkHeader ? Colors.black.withValues(alpha: 0.2) : const Color(0xFFEFF3F5);
+    final fg = t.darkHeader ? Colors.white70 : const Color(0xFF4B5563);
+    final narrow = MediaQuery.of(context).size.width < 620;
+    return Container(
+      color: bar,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      child: Row(
+        children: [
+          Icon(Icons.support_agent, size: 15, color: fg),
+          const SizedBox(width: 6),
+          if (!narrow) Text('Destek: +90 850 000 00 00', style: TextStyle(color: fg, fontSize: 12)),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: () => isPreview ? app.exitStorefrontPreview() : app.requestDealerLogin(),
+            style: TextButton.styleFrom(foregroundColor: t.darkHeader ? Colors.white : t.primary, padding: const EdgeInsets.symmetric(horizontal: 8)),
+            icon: Icon(isPreview ? Icons.dashboard : Icons.store_mall_directory, size: 16),
+            label: Text(isPreview ? 'Panele Dön' : 'Bayi Girişi', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MainHeader extends StatelessWidget {
+  const _MainHeader({required this.t, required this.cartCount, required this.searchCtrl, required this.onSearch, required this.onCart});
+  final StoreThemeData t;
+  final int cartCount;
+  final TextEditingController searchCtrl;
+  final ValueChanged<String> onSearch;
+  final VoidCallback onCart;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
     final width = MediaQuery.of(context).size.width;
-    final showSearch = width >= 900;
-    final compactDealer = width < 620;
+    final showSearch = width >= 720;
     final fg = t.headerFg;
     return Material(
       color: t.headerBg,
-      elevation: 2,
+      elevation: 1.5,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: Row(
           children: [
-            Icon(Icons.shopping_bag, color: t.darkHeader ? t.headerFg : t.accent),
-            const SizedBox(width: 8),
-            Text('ZenShop', style: TextStyle(color: fg, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: t.accent, borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.bolt, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Text('EXFIN', style: TextStyle(color: fg, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+            Text(' B2B', style: TextStyle(color: t.accent, fontSize: 22, fontWeight: FontWeight.w900)),
             if (showSearch) ...[
-              const SizedBox(width: 20),
+              const SizedBox(width: 28),
               Expanded(
                 child: SizedBox(
-                  height: 42,
+                  height: 46,
                   child: TextField(
                     controller: searchCtrl,
                     textInputAction: TextInputAction.search,
                     onSubmitted: onSearch,
                     decoration: InputDecoration(
-                      hintText: 'Ürün ara…',
+                      hintText: 'Ürün, SKU veya marka ara…',
                       prefixIcon: const Icon(Icons.search, size: 20),
                       filled: true,
                       fillColor: t.darkHeader ? Colors.white : const Color(0xFFF1F5F9),
                       contentPadding: EdgeInsets.zero,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: t.accent.withValues(alpha: 0.4))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                     ),
                   ),
                 ),
               ),
+              const SizedBox(width: 16),
             ] else
               const Spacer(),
             PopupMenuButton<StoreTheme>(
-              tooltip: 'Tema',
+              tooltip: 'Tema seç',
               icon: Icon(Icons.palette_outlined, color: fg),
               onSelected: app.setStoreTheme,
               itemBuilder: (_) => [
                 for (final th in StoreTheme.values) PopupMenuItem(value: th, child: Text(storeThemeData(th).label)),
               ],
             ),
-            IconButton(
+            const SizedBox(width: 4),
+            FilledButton.icon(
               onPressed: onCart,
-              icon: Badge(label: Text('$cartCount'), isLabelVisible: cartCount > 0, child: Icon(Icons.shopping_cart_outlined, color: fg)),
+              style: FilledButton.styleFrom(backgroundColor: t.accent, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+              icon: Badge(label: Text('$cartCount'), isLabelVisible: cartCount > 0, child: const Icon(Icons.shopping_cart_outlined, size: 20)),
+              label: const Text('Sepet'),
             ),
-            const SizedBox(width: 2),
-            if (compactDealer)
-              IconButton(
-                tooltip: isPreview ? 'Panele Dön' : 'Bayi Girişi',
-                onPressed: () => isPreview ? app.exitStorefrontPreview() : app.requestDealerLogin(),
-                icon: Icon(isPreview ? Icons.dashboard : Icons.store_mall_directory, color: fg),
-              )
-            else
-              OutlinedButton.icon(
-                onPressed: () => isPreview ? app.exitStorefrontPreview() : app.requestDealerLogin(),
-                style: OutlinedButton.styleFrom(foregroundColor: fg, side: BorderSide(color: fg.withValues(alpha: 0.5))),
-                icon: Icon(isPreview ? Icons.dashboard : Icons.store_mall_directory, size: 18),
-                label: Text(isPreview ? 'Panele Dön' : 'Bayi Girişi'),
-              ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _Hero extends StatelessWidget {
-  const _Hero({required this.t});
-  final StoreThemeData t;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-      padding: const EdgeInsets.all(36),
-      decoration: BoxDecoration(gradient: t.heroGradient, borderRadius: BorderRadius.circular(t.cardRadius + 6)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(t.heroTitle, style: TextStyle(color: t.darkHeader ? Colors.white : const Color(0xFF111827), fontSize: 34, fontWeight: FontWeight.w900, height: 1.05)),
-                const SizedBox(height: 12),
-                Text(t.heroSubtitle, style: TextStyle(color: t.darkHeader ? Colors.white70 : const Color(0xFF374151), fontSize: 15, height: 1.4)),
-                const SizedBox(height: 18),
-                FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: t.accent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
-                  onPressed: () {},
-                  child: const Text('Alışverişe Başla'),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -314,31 +310,145 @@ class _CategoryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (categories.isEmpty) return const SizedBox(height: 8);
-    return SizedBox(
-      height: 48,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        children: [
-          _chip(context, 'Tümü', selected == null, () => onSelect(null)),
-          for (final c in categories) _chip(context, c.name, selected == c.slug, () => onSelect(c.slug)),
-        ],
+    if (categories.isEmpty) return const SizedBox.shrink();
+    return Container(
+      color: t.headerBg,
+      padding: const EdgeInsets.only(bottom: 6),
+      child: SizedBox(
+        height: 44,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            _navItem(context, 'Tümü', selected == null, () => onSelect(null)),
+            for (final c in categories) _navItem(context, c.name, selected == c.slug, () => onSelect(c.slug)),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _chip(BuildContext context, String label, bool sel, VoidCallback onTap) => Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: ChoiceChip(
-          label: Text(label),
-          selected: sel,
-          onSelected: (_) => onTap(),
-          selectedColor: t.primary,
-          labelStyle: TextStyle(color: sel ? Colors.white : const Color(0xFF334155), fontWeight: FontWeight.w600),
-          showCheckmark: false,
+  Widget _navItem(BuildContext context, String label, bool sel, VoidCallback onTap) => InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: sel ? t.accent : Colors.transparent, width: 3)),
+          ),
+          child: Text(label, style: TextStyle(color: sel ? t.accent : const Color(0xFF374151), fontWeight: sel ? FontWeight.w800 : FontWeight.w600, fontSize: 13.5)),
         ),
       );
+}
+
+class _Hero extends StatelessWidget {
+  const _Hero({required this.t});
+  final StoreThemeData t;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = t.darkHeader;
+    final titleColor = dark ? Colors.white : const Color(0xFF0F2A30);
+    final wide = MediaQuery.of(context).size.width >= 800;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 24, 24, 4),
+      padding: const EdgeInsets.all(36),
+      decoration: BoxDecoration(gradient: t.heroGradient, borderRadius: BorderRadius.circular(t.cardRadius + 6)),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: t.accent, borderRadius: BorderRadius.circular(20)),
+                  child: const Text('B2B • C2C • TOPTAN', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                ),
+                const SizedBox(height: 16),
+                Text(t.heroTitle, style: TextStyle(color: titleColor, fontSize: 34, fontWeight: FontWeight.w900, height: 1.08)),
+                const SizedBox(height: 12),
+                Text(t.heroSubtitle, style: TextStyle(color: dark ? Colors.white70 : const Color(0xFF334155), fontSize: 15, height: 1.45)),
+                const SizedBox(height: 20),
+                FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: t.accent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16)),
+                  onPressed: () {},
+                  child: const Text('Ürünleri İncele'),
+                ),
+              ],
+            ),
+          ),
+          if (wide) ...[
+            const SizedBox(width: 24),
+            Expanded(
+              flex: 2,
+              child: Container(
+                height: 180,
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(16)),
+                child: Icon(Icons.local_shipping_outlined, size: 84, color: t.primary.withValues(alpha: 0.5)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryCards extends StatelessWidget {
+  const _CategoryCards({required this.t, required this.categories, required this.onSelect});
+  final StoreThemeData t;
+  final List<Category> categories;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 10),
+          child: Row(
+            children: [
+              const Text('Kategoriler', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+              const Spacer(),
+              TextButton(onPressed: () => onSelect(null), style: TextButton.styleFrom(foregroundColor: t.accent), child: const Text('Tümünü gör →')),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 84,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: categories.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (_, i) {
+              final c = categories[i];
+              return InkWell(
+                onTap: () => onSelect(c.slug),
+                borderRadius: BorderRadius.circular(t.cardRadius),
+                child: Container(
+                  width: 150,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: t.accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(t.cardRadius)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(Icons.category_outlined, color: t.primary, size: 22),
+                      Text(c.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: t.primary, fontWeight: FontWeight.w700, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _StoreProductCard extends StatelessWidget {
@@ -356,47 +466,50 @@ class _StoreProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(t.cardRadius),
-          border: Border.all(color: const Color(0xFFEEF2F7)),
-          boxShadow: const [BoxShadow(color: Color(0x10101828), blurRadius: 10, offset: Offset(0, 4))],
+          border: Border.all(color: const Color(0xFFEAEEF2)),
+          boxShadow: const [BoxShadow(color: Color(0x0F101828), blurRadius: 12, offset: Offset(0, 4))],
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AspectRatio(
-              aspectRatio: 1.2,
+              aspectRatio: 1.25,
               child: Container(
-                color: const Color(0xFFF6F7F9),
+                color: const Color(0xFFF6F8FA),
                 child: product.imageUrl == null
                     ? const Icon(Icons.image_outlined, size: 36, color: Color(0xFFCBD5E1))
                     : Image.network(product.imageUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Center(child: Icon(Icons.inventory_2_outlined, size: 34, color: Color(0xFFCBD5E1)))),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(product.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5, height: 1.2)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(child: Text(money(product.price, product.currencyCode), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: t.primary))),
-                      Material(
-                        color: t.accent,
-                        borderRadius: BorderRadius.circular(10),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(10),
-                          onTap: () {
-                            context.read<AppState>().addToCart(product);
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${product.name} sepete eklendi'), duration: const Duration(seconds: 1)));
-                          },
-                          child: const Padding(padding: EdgeInsets.all(8), child: Icon(Icons.add_shopping_cart, color: Colors.white, size: 18)),
-                        ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(product.sku, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 3),
+                    Expanded(
+                      child: Text(product.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5, height: 1.25)),
+                    ),
+                    Text(money(product.price, product.currencyCode), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: t.primary)),
+                    const Text('+ KDV', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 10)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(backgroundColor: t.accent, padding: const EdgeInsets.symmetric(vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                        onPressed: () {
+                          context.read<AppState>().addToCart(product);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${product.name} sepete eklendi'), duration: const Duration(seconds: 1)));
+                        },
+                        icon: const Icon(Icons.add_shopping_cart, size: 16),
+                        label: const Text('Sepete Ekle', style: TextStyle(fontSize: 12.5)),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -407,24 +520,59 @@ class _StoreProductCard extends StatelessWidget {
 }
 
 class _Footer extends StatelessWidget {
-  const _Footer({required this.t});
+  const _Footer({required this.t, required this.categories});
   final StoreThemeData t;
+  final List<Category> categories;
 
   @override
   Widget build(BuildContext context) {
+    final wide = MediaQuery.of(context).size.width >= 760;
+    final brand = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text('EXFIN B2B', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
+        SizedBox(height: 8),
+        SizedBox(width: 240, child: Text('Bayi ve toptan müşteriler için güvenli B2B/C2C tedarik platformu.', style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.5))),
+      ],
+    );
+    final links = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text('Bağlantılar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        SizedBox(height: 10),
+        Text('Ürünler', style: TextStyle(color: Colors.white60, fontSize: 13)),
+        SizedBox(height: 6),
+        Text('Hakkımızda', style: TextStyle(color: Colors.white60, fontSize: 13)),
+        SizedBox(height: 6),
+        Text('İletişim', style: TextStyle(color: Colors.white60, fontSize: 13)),
+        SizedBox(height: 6),
+        Text('Bayi Girişi', style: TextStyle(color: Colors.white60, fontSize: 13)),
+      ],
+    );
+    final cats = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Kategoriler', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 10),
+        for (final c in categories.take(5))
+          Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(c.name, style: const TextStyle(color: Colors.white60, fontSize: 13))),
+      ],
+    );
+
     return Container(
-      margin: const EdgeInsets.only(top: 20),
-      padding: const EdgeInsets.all(28),
-      color: const Color(0xFF111827),
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.fromLTRB(28, 32, 28, 20),
+      color: const Color(0xFF0F172A),
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('ZenShop', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
-          SizedBox(height: 8),
-          Text('Zensoft B2B/C2C · Güvenli ödeme · Hızlı teslimat', style: TextStyle(color: Colors.white60, fontSize: 13)),
-          SizedBox(height: 6),
-          Text('© 2026 Zensoft Yazılım A.Ş.', style: TextStyle(color: Colors.white38, fontSize: 12)),
+        children: [
+          if (wide)
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(flex: 2, child: brand), Expanded(child: links), Expanded(child: cats)])
+          else
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [brand, const SizedBox(height: 20), links, const SizedBox(height: 20), cats]),
+          const Divider(color: Colors.white12, height: 36),
+          const Text('© 2026 EXFIN B2B · Tüm hakları saklıdır.', style: TextStyle(color: Colors.white38, fontSize: 12)),
         ],
       ),
     );
@@ -477,7 +625,7 @@ class _CartSheetState extends State<_CartSheet> {
     try {
       final orderNo = await app.checkoutGuest(name: name.text.trim(), email: email.text.trim());
       if (!mounted) return;
-      Navigator.pop(context); // close cart sheet
+      Navigator.pop(context);
       showDialog(
         context: context,
         builder: (_) => AlertDialog(

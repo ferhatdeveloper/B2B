@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:zen_b2b/main.dart';
-import 'package:zen_b2b/state/app_state.dart' show AppState, AppMode;
+import 'package:exfin_b2b/main.dart';
+import 'package:exfin_b2b/state/app_state.dart' show AppState, AppMode;
 
 void main() {
   testWidgets('Dealer login renders in panel mode when logged out', (WidgetTester tester) async {
@@ -29,8 +29,8 @@ void main() {
     );
     await tester.pump();
 
-    // Default mode is storefront → public shop header is shown.
-    expect(find.text('ZenShop'), findsOneWidget);
+    // Storefront mode → public shop header (EXFIN) and dealer-login entry.
+    expect(find.text('EXFIN'), findsWidgets);
     expect(find.text('Bayi Girişi'), findsWidgets);
   });
 }

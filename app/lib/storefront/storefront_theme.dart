@@ -36,6 +36,22 @@ class StoreThemeData {
 
 StoreThemeData storeThemeData(StoreTheme t) {
   switch (t) {
+    case StoreTheme.zetem:
+      // Clean corporate B2B look inspired by zetem.co.uk: cyan accent,
+      // white surfaces, light-cyan category cards, generous spacing.
+      return const StoreThemeData(
+        label: 'Zetem',
+        primary: Color(0xFF00363F),
+        accent: Color(0xFF00BCD4),
+        scaffoldBg: Color(0xFFF7FAFB),
+        headerBg: Colors.white,
+        headerFg: Color(0xFF0F2A30),
+        darkHeader: false,
+        cardRadius: 14,
+        heroGradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [Color(0xFFE0F7FA), Color(0xFFD7EFD3)]),
+        heroTitle: 'Toptan tedarik, tek noktadan',
+        heroSubtitle: 'Endüstriyel ve işletme ürünlerinde güvenilir B2B tedarik. Üye olun, özel fiyatları görün.',
+      );
     case StoreTheme.minimal:
       return const StoreThemeData(
         label: 'Minimal',

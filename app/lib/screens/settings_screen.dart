@@ -294,6 +294,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 class _AppearanceCard extends StatelessWidget {
   String _themeLabel(StoreTheme t) => switch (t) {
+        StoreTheme.zetem => 'Zetem',
         StoreTheme.minimal => 'Minimal',
         StoreTheme.modern => 'Modern',
         StoreTheme.bold => 'Bold',
