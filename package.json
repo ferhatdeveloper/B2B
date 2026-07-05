@@ -1,0 +1,17 @@
+{
+  "name": "b2b",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "postgrest": "postgrest config/postgrest.conf",
+    "postgrest:fetch": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/fetch-postgrest-windows.ps1",
+    "postgrest:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-postgrest-local.ps1",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

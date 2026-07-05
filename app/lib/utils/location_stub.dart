@@ -1,0 +1,2 @@
+String currentSearch() => '';
+void clearQuery() {}
