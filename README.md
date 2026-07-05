@@ -19,6 +19,8 @@ docker compose up -d
 
 PostgREST varsayılan olarak `http://localhost:3002` adresinde açılır.
 
+Çok kiracılı kurulum (merkez_db + zetem_db): `database/README_TENANTS.md`
+
 Örnek kontroller:
 
 ```bash

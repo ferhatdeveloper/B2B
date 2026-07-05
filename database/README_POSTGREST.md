@@ -6,8 +6,12 @@ Bu yapı `RetailEX` deposundaki PostgREST yaklaşımının B2B için sadeleştir
 
 | Servis | Port | Açıklama |
 | --- | ---: | --- |
-| PostgreSQL | 5432 | B2B veritabanı |
-| PostgREST | 3002 | PostgreSQL tablo/RPC REST API |
+| PostgreSQL | 5432 | `merkez_db`, `b2b_local`, `zetem_db` |
+| PostgREST (merkez) | 3001 | Kiracı kayıt defteri `tenants` |
+| PostgREST (EXFIN) | 3002 | Yerel geliştirme `b2b_local` |
+| PostgREST (Zetem) | 3003 | Zetem müşteri `zetem_db` |
+
+Çok kiracılı kurulum: `database/README_TENANTS.md`
 
 ## Şemalar
 
