@@ -78,6 +78,19 @@ flutter:
     - assets/ella/home9/
     - assets/ella/home10/
 
+  fonts:
+    - family: Spartan
+      fonts:
+        - asset: assets/fonts/spartan/Spartan-Regular.ttf
+        - asset: assets/fonts/spartan/Spartan-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/spartan/Spartan-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/spartan/Spartan-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/spartan/Spartan-Black.ttf
+          weight: 900
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

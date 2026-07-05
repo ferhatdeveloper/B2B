@@ -156,7 +156,7 @@ class EllaHeader extends ConsumerWidget {
                 const Spacer(),
               ] else
                 const Spacer(),
-              _icons(ref, settings, t.headerFg),
+              _icons(ref, settings, t.headerFg, width),
             ],
           ),
         );
@@ -173,7 +173,7 @@ class EllaHeader extends ConsumerWidget {
                 const SizedBox(width: 20),
                 Expanded(child: _searchField(onSubmitted: onSearch, fill: t.searchFill, fg: t.headerFg)),
               ],
-              _icons(ref, settings, t.headerFg),
+              _icons(ref, settings, t.headerFg, width),
             ],
           ),
         );
@@ -189,7 +189,7 @@ class EllaHeader extends ConsumerWidget {
                 SizedBox(width: 280, child: _searchField(onSubmitted: onSearch)),
                 const SizedBox(width: 12),
               ],
-              _icons(ref, settings, Colors.black),
+              _icons(ref, settings, Colors.black, width),
             ],
           ),
         );
@@ -235,9 +235,9 @@ class EllaHeader extends ConsumerWidget {
                 children: [
                   _logo(fg: text),
                   const SizedBox(height: 10),
-                  SizedBox(width: 480, child: _searchField(onSubmitted: onSearch, fill: t.searchFill)),
+                  SizedBox(width: width > 520 ? 480 : width - 40, child: _searchField(onSubmitted: onSearch, fill: t.searchFill)),
                   const SizedBox(height: 8),
-                  _icons(ref, settings, text),
+                  _icons(ref, settings, text, width),
                 ],
               )
             : Row(
@@ -248,7 +248,7 @@ class EllaHeader extends ConsumerWidget {
                     Expanded(child: SizedBox(height: 42, child: _searchField(onSubmitted: onSearch, fill: t.searchFill, fg: text))),
                   ] else
                     const Spacer(),
-                  _icons(ref, settings, text),
+                  Flexible(child: _icons(ref, settings, text, width)),
                 ],
               ),
       ),
@@ -292,29 +292,33 @@ class EllaHeader extends ConsumerWidget {
     );
   }
 
-  Widget _icons(WidgetRef ref, AppSettingsNotifier settings, Color fg) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+  Widget _icons(WidgetRef ref, AppSettingsNotifier settings, Color fg, double width) {
+    final compact = width < 480;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!compact)
           PopupMenuButton<StoreTheme>(
             tooltip: 'Tema',
             icon: Icon(Icons.palette_outlined, color: fg, size: 20),
             onSelected: settings.setStoreTheme,
             itemBuilder: (_) => [for (final th in StoreTheme.values) PopupMenuItem(value: th, child: Text(storeThemeData(th).label))],
           ),
-          const SizedBox(width: 4),
-          FilledButton.icon(
-            onPressed: onCart,
-            style: FilledButton.styleFrom(
-              backgroundColor: t.accent,
-              foregroundColor: t.buttonStyle == EllaButtonStyle.goldAccent ? t.primary : Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(t.cardRadius > 0 ? t.cardRadius : 0)),
-            ),
-            icon: Badge(label: Text('$cartCount'), isLabelVisible: cartCount > 0, child: const Icon(Icons.shopping_cart_outlined, size: 18)),
-            label: const Text('Sepet', style: TextStyle(fontSize: 12)),
+        if (!compact) const SizedBox(width: 4),
+        FilledButton.icon(
+          onPressed: onCart,
+          style: FilledButton.styleFrom(
+            backgroundColor: t.accent,
+            foregroundColor: t.buttonStyle == EllaButtonStyle.goldAccent ? t.primary : Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(t.cardRadius > 0 ? t.cardRadius : 0)),
           ),
-        ],
-      );
+          icon: Badge(label: Text('$cartCount'), isLabelVisible: cartCount > 0, child: const Icon(Icons.shopping_cart_outlined, size: 18)),
+          label: compact ? const SizedBox.shrink() : const Text('Sepet', style: TextStyle(fontSize: 12)),
+        ),
+      ],
+    );
+  }
 
   Widget _dealerBtn(AppSettingsNotifier settings, Color fg) => TextButton.icon(
         onPressed: () => isPreview ? settings.exitStorefrontPreview() : settings.requestDealerLogin(),

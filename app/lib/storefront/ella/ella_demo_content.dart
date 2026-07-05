@@ -10,11 +10,18 @@ class EllaDemoContent {
     required this.heroCta,
     required this.subBanners,
     required this.productImages,
+    this.mobileHeroImage,
     this.secondaryHeroImage,
     this.secondaryHeroTitle,
+    this.brandImages = const [],
+    this.spotlights = const [],
+    this.sideBannerImages = const [],
+    this.heroPaddingTopPercent = 38.29787234042553,
+    this.heroMobilePaddingTopPercent = 136.36363636363637,
   });
 
   final String heroImage;
+  final String? mobileHeroImage;
   final String heroTitle;
   final String heroSubtitle;
   final String heroCta;
@@ -22,6 +29,18 @@ class EllaDemoContent {
   final List<String> productImages;
   final String? secondaryHeroImage;
   final String? secondaryHeroTitle;
+  final List<String> brandImages;
+  final List<EllaSpotlight> spotlights;
+  final List<String> sideBannerImages;
+  final double heroPaddingTopPercent;
+  final double heroMobilePaddingTopPercent;
+}
+
+class EllaSpotlight {
+  const EllaSpotlight({required this.image, required this.title, required this.description});
+  final String image;
+  final String title;
+  final String description;
 }
 
 class EllaSubBanner {
@@ -55,6 +74,7 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
     case StoreTheme.ella1:
       return const EllaDemoContent(
         heroImage: 'assets/ella/home1/banner-fullwith-t.jpg',
+        mobileHeroImage: 'assets/ella/home1/banner-fullwith-mobile-t.jpg',
         heroTitle: 'COSMOPOLIS',
         heroSubtitle: 'Quisquemos sodales suscipit tortor ditaemcos condimentum de cosmo lacus meleifend menean diverra loremous.',
         heroCta: 'SHOP NOW',
@@ -63,18 +83,37 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
           EllaSubBanner(image: 'assets/ella/home1/sub-banner-2-compressor-p.jpg', title: "EDITOR'S PICK"),
           EllaSubBanner(image: 'assets/ella/home1/sub-banner-3-compressor-p.jpg', title: "EDITOR'S PICK"),
         ],
+        brandImages: [
+          'assets/ella/home1/brand1-p.png',
+          'assets/ella/home1/brand2-p.png',
+          'assets/ella/home1/brand3-p.png',
+          'assets/ella/home1/brand4-p.png',
+          'assets/ella/home1/brand5-p.png',
+        ],
+        spotlights: [
+          EllaSpotlight(image: 'assets/ella/home1/spotlight1-p.jpg', title: 'LOREM DE DORUS', description: 'Nullam aliquet vestibulum augue non varius. Cras cosmo congue an melitos.'),
+          EllaSpotlight(image: 'assets/ella/home1/spotlight2-p.jpg', title: 'MILANCELOS LANOS', description: 'Duis tristique del ante le maliquam. Praesent murna de tellus laoreet.'),
+          EllaSpotlight(image: 'assets/ella/home1/spotlight3-p.jpg', title: 'COMO A MILANO', description: 'Praesent murna de tellus laoreet cosmopolis.'),
+        ],
         productImages: _products,
       );
     case StoreTheme.ella2:
       return const EllaDemoContent(
-        heroImage: 'assets/ella/home2/banner-belle-dolls.gif',
-        heroTitle: 'GENTLEMAN COLLECTION',
-        heroSubtitle: 'Extra 10% off on first order — multi-brand fashion storefront.',
-        heroCta: 'DISCOVER',
+        heroImage: 'assets/ella/home2/banner-slide.jpg',
+        mobileHeroImage: 'assets/ella/home2/banner-slide-mb.jpg',
+        heroPaddingTopPercent: 43.50282485875,
+        heroTitle: 'INSTILEY',
+        heroSubtitle: 'Set Your Style — Neque porro quisquam est qui dolorem ipsum quia dolor sit amet.',
+        heroCta: 'SHOP NOW',
         subBanners: [
           EllaSubBanner(image: 'assets/ella/home2/banner-header-product-2.jpg', title: 'BELLE DOLLS'),
           EllaSubBanner(image: 'assets/ella/home2/banner-header-product-3.jpg', title: 'AMBER'),
           EllaSubBanner(image: 'assets/ella/home2/banner-header-product-4.jpg', title: 'GLASSY'),
+        ],
+        spotlights: [
+          EllaSpotlight(image: 'assets/ella/home2/spotlight-1.jpg', title: 'SPOTLIGHT 1', description: 'Multi-brand editorial vitrin bloğu.'),
+          EllaSpotlight(image: 'assets/ella/home2/spotlight-2.jpg', title: 'SPOTLIGHT 2', description: 'Ella Home 2 spotlight carousel.'),
+          EllaSpotlight(image: 'assets/ella/home2/spotlight-3.jpg', title: 'SPOTLIGHT 3', description: 'Marka hikayesi ve koleksiyon vurgusu.'),
         ],
         productImages: _products,
       );
@@ -93,7 +132,10 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
       );
     case StoreTheme.ella4:
       return const EllaDemoContent(
-        heroImage: 'assets/ella/home4/banner-1.jpg',
+        heroImage: 'assets/ella/home4/banner-slider-show.jpg',
+        mobileHeroImage: 'assets/ella/home4/banner-slider-show-mb.jpg',
+        secondaryHeroImage: 'assets/ella/home4/banner-slider-show-2.jpg',
+        secondaryHeroTitle: 'MINT EDIT',
         heroTitle: 'MINT COLLECTION',
         heroSubtitle: 'Pop-art shadow buttons and Playfair headings — Ella Home 4.',
         heroCta: 'SHOP MINT',
@@ -107,7 +149,8 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
     case StoreTheme.ella5:
       return const EllaDemoContent(
         heroImage: 'assets/ella/home5/halo-block-banner-style-1.jpg',
-        secondaryHeroImage: 'assets/ella/home5/banner-1.jpg',
+        mobileHeroImage: 'assets/ella/home5/halo-block-banner-style-1-mb.jpg',
+        secondaryHeroImage: 'assets/ella/home5/halo-block-banner-style-2.jpg',
         secondaryHeroTitle: 'SPRING EDIT',
         heroTitle: 'DUAL HERO',
         heroSubtitle: 'Two stacked fullwidth heroes with blush announcement bar.',
@@ -117,14 +160,25 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
           EllaSubBanner(image: 'assets/ella/home5/banner-3.jpg', title: 'STYLE 02'),
           EllaSubBanner(image: 'assets/ella/home5/banner-4.jpg', title: 'STYLE 03'),
         ],
+        brandImages: [
+          'assets/ella/home5/halo-brand-1.jpg',
+          'assets/ella/home5/halo-brand-2.jpg',
+          'assets/ella/home5/halo-brand-3.jpg',
+          'assets/ella/home5/halo-brand-4.jpg',
+          'assets/ella/home5/halo-brand-5.jpg',
+          'assets/ella/home5/halo-brand-6.jpg',
+        ],
         productImages: _products,
       );
     case StoreTheme.ella6:
       return const EllaDemoContent(
-        heroImage: 'assets/ella/home6/banner-1.jpg',
+        heroImage: 'assets/ella/home6/Slideshow-3.jpg',
+        mobileHeroImage: 'assets/ella/home6/slide-show-3-mb.jpg',
         heroTitle: 'SUMMER SALE',
         heroSubtitle: 'Navy Inter typography with pill buttons and banner grid.',
         heroCta: 'SHOP SALE',
+        heroPaddingTopPercent: 40.677966101,
+        heroMobilePaddingTopPercent: 136.36363636363637,
         subBanners: [
           EllaSubBanner(image: 'assets/ella/home6/banner-2.jpg', title: 'DEAL 1'),
           EllaSubBanner(image: 'assets/ella/home6/banner-3.jpg', title: 'DEAL 2'),
@@ -134,7 +188,8 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
       );
     case StoreTheme.ella7:
       return const EllaDemoContent(
-        heroImage: 'assets/ella/home7/banner-1.jpg',
+        heroImage: 'assets/ella/home7/banner-full.jpg',
+        mobileHeroImage: 'assets/ella/home7/banner-full-mb.jpg',
         heroTitle: 'NEW ARRIVALS',
         heroSubtitle: 'Static hero with dark search header and red accent CTA.',
         heroCta: 'BUY NOW',
@@ -143,11 +198,23 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
           EllaSubBanner(image: 'assets/ella/home7/banner-3.jpg', title: 'BESTSELLER'),
           EllaSubBanner(image: 'assets/ella/home7/banner-blog-1.jpg', title: 'BLOG'),
         ],
+        sideBannerImages: [
+          'assets/ella/home7/product-banner.jpg',
+          'assets/ella/home7/product-banner-2.jpg',
+        ],
+        brandImages: [
+          'assets/ella/home7/brand-1.png',
+          'assets/ella/home7/brand-2.png',
+          'assets/ella/home7/brand-3.png',
+          'assets/ella/home7/brand-4.png',
+          'assets/ella/home7/brand-5.png',
+        ],
         productImages: _products,
       );
     case StoreTheme.ella8:
       return const EllaDemoContent(
-        heroImage: 'assets/ella/home8/banner-1.png',
+        heroImage: 'assets/ella/home8/banner-slideshow.jpg',
+        mobileHeroImage: 'assets/ella/home8/banner-slideshow-mb.jpg',
         heroTitle: 'KIDS & BABY',
         heroSubtitle: 'Blue header band with orange CTAs and tabbed category shop.',
         heroCta: 'SHOP KIDS',
@@ -156,11 +223,19 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
           EllaSubBanner(image: 'assets/ella/home8/banner-11.jpg', title: 'GIRLS'),
           EllaSubBanner(image: 'assets/ella/home8/banner-12.jpg', title: 'BABY'),
         ],
+        brandImages: [
+          'assets/ella/home8/brand-1.png',
+          'assets/ella/home8/brand-2.png',
+          'assets/ella/home8/brand-3.png',
+          'assets/ella/home8/brand-4.png',
+          'assets/ella/home8/brand-5.png',
+        ],
         productImages: _products,
       );
     case StoreTheme.ella9:
       return const EllaDemoContent(
         heroImage: 'assets/ella/home9/banner-1.jpg',
+        mobileHeroImage: 'assets/ella/home9/banner-1-mb.jpg',
         heroTitle: 'RIDE FURTHER',
         heroSubtitle: 'Cycling gear with gold accent and customer review blocks.',
         heroCta: 'SHOP BIKES',
@@ -169,18 +244,32 @@ EllaDemoContent ellaDemoContent(StoreTheme theme) {
           EllaSubBanner(image: 'assets/ella/home9/banner-10.jpg', title: 'MTB'),
           EllaSubBanner(image: 'assets/ella/home9/banner-11.png', title: 'GEAR'),
         ],
+        brandImages: ['assets/ella/home9/brands-logo.png'],
         productImages: _products,
       );
     case StoreTheme.ella10:
       return const EllaDemoContent(
-        heroImage: 'assets/ella/home10/banner-1.jpg',
-        heroTitle: 'MEGA SALE',
-        heroSubtitle: 'Flash deals, five-banner grid and navy mega-shop header.',
+        heroImage: 'assets/ella/home10/banner-slider1.jpg',
+        mobileHeroImage: 'assets/ella/home10/banner-slider1-mb.jpg',
+        heroPaddingTopPercent: 29.166666666,
+        heroMobilePaddingTopPercent: 90.909090909,
+        heroTitle: 'HUGE SAVING',
+        heroSubtitle: 'Sale up to 70% off on selected items — flash deals and mega shop layout.',
         heroCta: 'FLASH DEALS',
         subBanners: [
-          EllaSubBanner(image: 'assets/ella/home10/banner-10.png', title: 'TECH'),
-          EllaSubBanner(image: 'assets/ella/home10/banner-11.png', title: 'HOME'),
-          EllaSubBanner(image: 'assets/ella/home10/banner-12.png', title: 'SPORT'),
+          EllaSubBanner(image: 'assets/ella/home10/banner-10.png', title: 'LAPTOPS'),
+          EllaSubBanner(image: 'assets/ella/home10/banner-11.png', title: 'TABLETS'),
+          EllaSubBanner(image: 'assets/ella/home10/banner-12.png', title: 'CAMERAS'),
+          EllaSubBanner(image: 'assets/ella/home10/banner-13.png', title: 'SPEAKERS'),
+          EllaSubBanner(image: 'assets/ella/home10/banner-14.png', title: 'HEADPHONES'),
+        ],
+        brandImages: [
+          'assets/ella/home10/brand-1.png',
+          'assets/ella/home10/brand-2.png',
+          'assets/ella/home10/brand-3.png',
+          'assets/ella/home10/brand-4.png',
+          'assets/ella/home10/brand-5.png',
+          'assets/ella/home10/brand-6.png',
         ],
         productImages: _products,
       );
@@ -237,6 +326,7 @@ const ellaDemoReviews = [
   'Ürün fotoğraflarındaki gibi geldi, müşteri hizmetleri çok ilgili.',
 ];
 
+/// Geriye dönük uyumluluk — tema spotlights boşsa kullanılır.
 const ellaDemoSpotlights = [
   ('Yeni Sezon', 'Trend parçaları keşfedin'),
   ('Editör Seçimi', 'Haftanın favori kombinleri'),

@@ -5,6 +5,7 @@ import '../core/enums/app_enums.dart';
 import '../core/providers/app_providers.dart';
 import '../models/models.dart';
 import '../utils/format.dart';
+import 'ella/ella_layout.dart';
 import 'ella/ella_header.dart';
 import 'ella/ella_home_layout.dart';
 import 'storefront_theme.dart';
@@ -59,57 +60,63 @@ class _StorefrontShellState extends ConsumerState<StorefrontShell> {
     final isLoggedIn = ref.watch(isLoggedInProvider);
     final t = storeThemeData(storeTheme);
     final width = MediaQuery.sizeOf(context).width;
-    final cols = width >= 1280 ? 5 : width >= 1000 ? 4 : width >= 680 ? 3 : 2;
+    final cols = EllaLayout.productCols(width);
     final filtered = _categorySlug != null || _search.isNotEmpty;
 
-    return Scaffold(
-      backgroundColor: t.scaffoldBg,
-      body: Column(
-        children: [
-          EllaHeader(
-            t: t,
-            cartCount: cartCount,
-            searchCtrl: _searchCtrl,
-            onSearch: (v) {
-              _search = v.trim();
-              _refresh();
-            },
-            onCart: () => _openCart(context, t),
-            categories: _categories,
-            selectedCategory: _categorySlug,
-            onCategory: (s) {
-              setState(() => _categorySlug = s);
-              _refresh();
-            },
-            isPreview: isLoggedIn,
-          ),
-          Expanded(
-            child: FutureBuilder<List<Product>>(
-              future: _future,
-              builder: (context, snap) {
-                if (snap.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snap.hasError) return Center(child: Text('${snap.error}'));
-                final products = (snap.data ?? []).asMap().entries.map((e) => enrichProductWithEllaDemo(e.value, e.key)).toList();
-                final sections = EllaHomeLayout.buildBody(
-                  theme: storeTheme,
-                  t: t,
-                  products: products,
-                  categories: _categories,
-                  gridCols: cols,
-                  onCategory: (s) {
-                    setState(() => _categorySlug = s);
-                    _refresh();
-                  },
-                  onProduct: (p) => _quickView(context, storeTheme, t, p),
-                  filtered: filtered,
-                );
-                return ListView(children: sections);
+    return Theme(
+      data: Theme.of(context).copyWith(fontFamily: 'Spartan'),
+      child: Scaffold(
+        backgroundColor: t.scaffoldBg,
+        body: Column(
+          children: [
+            EllaHeader(
+              t: t,
+              cartCount: cartCount,
+              searchCtrl: _searchCtrl,
+              onSearch: (v) {
+                _search = v.trim();
+                _refresh();
               },
+              onCart: () => _openCart(context, t),
+              categories: _categories,
+              selectedCategory: _categorySlug,
+              onCategory: (s) {
+                setState(() => _categorySlug = s);
+                _refresh();
+              },
+              isPreview: isLoggedIn,
             ),
-          ),
+            Expanded(
+              child: FutureBuilder<List<Product>>(
+                future: _future,
+                builder: (context, snap) {
+                  if (snap.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snap.hasError) return Center(child: Text('${snap.error}'));
+                  final products = (snap.data ?? []).asMap().entries.map((e) => enrichProductWithEllaDemo(e.value, e.key)).toList();
+                  final sections = EllaHomeLayout.buildBody(
+                    theme: storeTheme,
+                    t: t,
+                    products: products,
+                    categories: _categories,
+                    gridCols: cols,
+                    onCategory: (s) {
+                      setState(() => _categorySlug = s);
+                      _refresh();
+                    },
+                    onProduct: (p) => _quickView(context, storeTheme, t, p),
+                    filtered: filtered,
+                  );
+                  return ListView(
+                    physics: const ClampingScrollPhysics(),
+                    children: sections,
+                  );
+                },
+              ),
+            ),
         ],
+      ),
       ),
     );
   }

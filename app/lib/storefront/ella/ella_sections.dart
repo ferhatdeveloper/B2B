@@ -7,6 +7,7 @@ import '../../models/models.dart';
 import '../../utils/format.dart';
 import 'ella_button.dart';
 import 'ella_demo_content.dart';
+import 'ella_layout.dart';
 import 'ella_theme_config.dart';
 
 class EllaSections {
@@ -24,6 +25,54 @@ class EllaSections {
       );
 
   static Widget policies(StoreThemeData t) {
+    if (t.policyColors.length >= 2) {
+      return Column(
+        children: [
+          Container(
+            width: double.infinity,
+            color: t.policyColors[0],
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text('FREE SHIPPING OVER \$99*', textAlign: TextAlign.center, style: TextStyle(color: t.primary, fontWeight: FontWeight.w700, fontSize: 13)),
+                      const SizedBox(height: 4),
+                      Text('Plus, two-day delivery on thousands of items.', textAlign: TextAlign.center, style: TextStyle(color: t.mutedText, fontSize: 11)),
+                    ],
+                  ),
+                ),
+                Container(width: 1, height: 36, color: t.mutedText.withValues(alpha: 0.2)),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text('AMAZING VALUE EVERY DAY', textAlign: TextAlign.center, style: TextStyle(color: t.primary, fontWeight: FontWeight.w700, fontSize: 13)),
+                      const SizedBox(height: 4),
+                      Text('Items you love at prices that fit your budget.', textAlign: TextAlign.center, style: TextStyle(color: t.mutedText, fontSize: 11)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            color: t.policyColors[1],
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: const [
+                _PolicyIconTile(icon: Icons.card_giftcard_outlined, label: 'FREE GIFT WRAPPING'),
+                _PolicyIconTile(icon: Icons.inventory_2_outlined, label: 'EASY RETURNS'),
+                _PolicyIconTile(icon: Icons.school_outlined, label: 'STUDENT DISCOUNT'),
+                _PolicyIconTile(icon: Icons.verified_user_outlined, label: 'SECURE SHOPPING'),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
     if (t.policyColors.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -52,53 +101,70 @@ class EllaSections {
       );
 
   static Widget hero(StoreThemeData t, StoreTheme theme, {int variant = 0}) {
-    final demo = ellaDemoContent(theme);
-    final image = variant == 1 && demo.secondaryHeroImage != null ? demo.secondaryHeroImage! : demo.heroImage;
-    final title = variant == 1 && demo.secondaryHeroTitle != null ? demo.secondaryHeroTitle! : demo.heroTitle;
-    final subtitle = variant == 0 ? demo.heroSubtitle : 'Ella stacked hero banner.';
-    final titleColor = Colors.white;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(0, 0, 0, 6),
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: [
-          AspectRatio(
-            aspectRatio: variant == 0 ? 2.6 : 2.2,
-            child: _ellaImage(image, fit: BoxFit.cover, fallback: t.heroGradient),
-          ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [Colors.black.withValues(alpha: 0.55), Colors.black.withValues(alpha: 0.1)],
+    return Builder(builder: (context) {
+      final demo = ellaDemoContent(theme);
+      final width = MediaQuery.sizeOf(context).width;
+      final wide = width >= 768;
+      final image = variant == 1 && demo.secondaryHeroImage != null
+          ? demo.secondaryHeroImage!
+          : (wide ? demo.heroImage : (demo.mobileHeroImage ?? demo.heroImage));
+      final title = variant == 1 && demo.secondaryHeroTitle != null ? demo.secondaryHeroTitle! : demo.heroTitle;
+      final subtitle = variant == 0 ? demo.heroSubtitle : demo.heroSubtitle;
+      final padTop = wide ? demo.heroPaddingTopPercent : demo.heroMobilePaddingTopPercent;
+
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: EllaRatioBox(
+          paddingTopPercent: padTop,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _ellaImage(image, fit: BoxFit.cover),
+              if (wide)
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [Colors.black.withValues(alpha: 0.5), Colors.transparent],
+                    ),
+                  ),
+                ),
+              Align(
+                alignment: wide ? Alignment.centerLeft : Alignment.center,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: wide ? 28 : 20, vertical: 20),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+                      children: [
+                        Container(width: 40, height: 2, color: Colors.white),
+                        const SizedBox(height: 10),
+                        Text(
+                          title,
+                          textAlign: wide ? TextAlign.start : TextAlign.center,
+                          style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 1.1),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          subtitle,
+                          textAlign: wide ? TextAlign.start : TextAlign.center,
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12, height: 1.45),
+                        ),
+                        const SizedBox(height: 14),
+                        EllaButton(t: t, label: demo.heroCta, compact: true),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(width: 40, height: 2, color: titleColor),
-                  const SizedBox(height: 10),
-                  Text(title, style: TextStyle(color: titleColor, fontSize: 30, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
-                  const SizedBox(height: 8),
-                  Text(subtitle, style: TextStyle(color: titleColor.withValues(alpha: 0.88), fontSize: 13, height: 1.45)),
-                  const SizedBox(height: 14),
-                  EllaButton(t: t, label: demo.heroCta, compact: true),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+        ),
+      );
+    });
   }
 
   static Widget dualHero(StoreThemeData t, StoreTheme theme) => Column(children: [hero(t, theme), hero(t, theme, variant: 1)]);
@@ -119,65 +185,157 @@ class EllaSections {
     final demo = ellaDemoContent(theme);
     final banners = demo.subBanners;
     if (banners.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-      child: Row(
-        children: [
-          for (var i = 0; i < banners.length; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Expanded(
-              child: InkWell(
-                onTap: () {
-                  if (categories.length > i) onSelect(categories[i].slug);
-                },
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    AspectRatio(aspectRatio: 1.85, child: _ellaImage(banners[i].image, fit: BoxFit.cover)),
-                    Text(
-                      banners[i].title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(banners[i].titleColor), fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.8),
-                    ),
-                  ],
-                ),
+
+    Widget tile(int i) {
+      return Expanded(
+        child: Padding(
+          padding: EdgeInsets.only(left: i == 0 ? 0 : 5, right: i == banners.length - 1 ? 0 : 5),
+          child: InkWell(
+            onTap: () {
+              if (categories.length > i) onSelect(categories[i].slug);
+            },
+            child: EllaRatioBox(
+              paddingTopPercent: 54.05405405405406,
+              child: Stack(
+                fit: StackFit.expand,
+                alignment: Alignment.center,
+                children: [
+                  _ellaImage(banners[i].image, fit: BoxFit.cover),
+                  Text(
+                    banners[i].title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(banners[i].titleColor), fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: 0.6),
+                  ),
+                ],
               ),
             ),
-          ],
-        ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, top: 6),
+      child: EllaContainer(
+        child: LayoutBuilder(
+          builder: (context, c) {
+            if (c.maxWidth < 576) {
+              return Column(
+                children: [
+                  for (var i = 0; i < banners.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: InkWell(
+                        onTap: () {
+                          if (categories.length > i) onSelect(categories[i].slug);
+                        },
+                        child: EllaRatioBox(
+                          paddingTopPercent: 54.05405405405406,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            alignment: Alignment.center,
+                            children: [
+                              _ellaImage(banners[i].image, fit: BoxFit.cover),
+                              Text(banners[i].title, style: TextStyle(color: Color(banners[i].titleColor), fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            }
+            return Row(children: [for (var i = 0; i < banners.length; i++) tile(i)]);
+          },
+        ),
       ),
     );
   }
 
   static Widget bannerGrid(StoreThemeData t, StoreTheme theme, int count, List<Category> categories) {
+    if (theme == StoreTheme.ella6 && count == 4) {
+      return _fourBannerHome6(t, categories);
+    }
     final demo = ellaDemoContent(theme);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: [
-          for (var i = 0; i < count; i++)
-            SizedBox(
-              width: count >= 4 ? 160 : 200,
-              height: 100,
-              child: Stack(
-                alignment: Alignment.bottomLeft,
-                children: [
-                  Positioned.fill(child: _ellaImage(demo.subBanners[i % demo.subBanners.length].image, fit: BoxFit.cover)),
-                  Container(
-                    width: double.infinity,
-                    color: Colors.black.withValues(alpha: 0.35),
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      categories.length > i ? categories[i].name.toUpperCase() : 'BANNER ${i + 1}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 10),
+    return EllaContainer(
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final tileW = c.maxWidth < 576 ? c.maxWidth : (c.maxWidth - (count >= 4 ? 30 : 10)) / (count >= 4 ? 4 : 2);
+          return Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (var i = 0; i < count; i++)
+                SizedBox(
+                  width: c.maxWidth < 576 ? c.maxWidth : tileW.clamp(140, 280),
+                  child: EllaRatioBox(
+                    paddingTopPercent: 60,
+                    child: Stack(
+                      alignment: Alignment.bottomLeft,
+                      children: [
+                        Positioned.fill(child: _ellaImage(demo.subBanners[i % demo.subBanners.length].image, fit: BoxFit.cover)),
+                        Container(
+                          width: double.infinity,
+                          color: Colors.black.withValues(alpha: 0.35),
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            categories.length > i ? categories[i].name.toUpperCase() : 'BANNER ${i + 1}',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 10),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  static Widget _fourBannerHome6(StoreThemeData t, List<Category> categories) {
+    return EllaContainer(
+      child: LayoutBuilder(
+        builder: (context, c) {
+          if (c.maxWidth < 768) {
+            return Column(
+              children: [
+                for (final img in ['assets/ella/home6/banner-1.jpg', 'assets/ella/home6/banner-2.jpg', 'assets/ella/home6/banner-3.jpg', 'assets/ella/home6/banner-4.jpg'])
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: EllaRatioBox(paddingTopPercent: 83.2, child: _ellaImage(img, fit: BoxFit.cover)),
+                  ),
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 1,
+                child: EllaRatioBox(paddingTopPercent: 83.2, child: _ellaImage('assets/ella/home6/banner-1.jpg', fit: BoxFit.cover)),
               ),
-            ),
-        ],
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 1,
+                child: Column(
+                  children: [
+                    EllaRatioBox(paddingTopPercent: 39.655172413, child: _ellaImage('assets/ella/home6/banner-2.jpg', fit: BoxFit.cover)),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: EllaRatioBox(paddingTopPercent: 82.380952381, child: _ellaImage('assets/ella/home6/banner-3.jpg', fit: BoxFit.cover))),
+                        const SizedBox(width: 10),
+                        Expanded(child: EllaRatioBox(paddingTopPercent: 82.380952381, child: _ellaImage('assets/ella/home6/banner-4.jpg', fit: BoxFit.cover))),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -276,36 +434,56 @@ class EllaSections {
     void Function(Product) onProduct,
   ) {
     if (products.isEmpty) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle(t, 'Öne Çıkan Ürünler', trailing: '${products.length} ürün'),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: cols, mainAxisSpacing: 14, crossAxisSpacing: 14, childAspectRatio: 0.62),
-            itemCount: products.length,
-            itemBuilder: (_, i) => _productCard(t, theme, i, products[i], onProduct),
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, c) {
+        final columns = cols > 0 ? cols : EllaLayout.productCols(c.maxWidth);
+        final aspect = EllaLayout.productAspectRatio(c.maxWidth);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            EllaContainer(
+              child: EllaSectionHeader(t: t, title: 'New Arrivals', viewAll: 'View All'),
+            ),
+            EllaContainer(
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  mainAxisSpacing: 14,
+                  crossAxisSpacing: 14,
+                  childAspectRatio: aspect,
+                ),
+                itemCount: products.length,
+                itemBuilder: (_, i) => _productCard(t, theme, i, products[i], onProduct),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  static Widget productCarousel(StoreThemeData t, StoreTheme theme, List<Product> products, void Function(Product) onProduct) {
+  static Widget productCarousel(
+    StoreThemeData t,
+    StoreTheme theme,
+    List<Product> products,
+    void Function(Product) onProduct, {
+    int variant = 1,
+  }) {
     final items = products.take(8).toList();
     if (items.isEmpty) return const SizedBox.shrink();
-    return Column(
+    final titles = ['New Arrivals', 'Trending Now', 'Best Sellers', 'Featured Products'];
+    final title = titles[(variant - 1) % titles.length];
+  return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle(t, 'Popüler Ürünler'),
+        EllaContainer(child: EllaSectionHeader(t: t, title: title, viewAll: 'View All')),
         SizedBox(
           height: 260,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: EllaLayout.hPad),
             itemCount: items.length,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (_, i) => SizedBox(width: 180, child: _productCard(t, theme, i, items[i], onProduct)),
@@ -348,98 +526,155 @@ class EllaSections {
     );
   }
 
-  static Widget productSideBanner(StoreThemeData t, StoreTheme theme, List<Product> products, void Function(Product) onProduct) {
+  static Widget productSideBanner(
+    StoreThemeData t,
+    StoreTheme theme,
+    List<Product> products,
+    void Function(Product) onProduct, {
+    int variant = 1,
+  }) {
     final demo = ellaDemoContent(theme);
     final items = products.take(4).toList();
     if (items.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 2,
-            child: AspectRatio(
-              aspectRatio: 0.72,
-              child: _ellaImage(demo.heroImage, fit: BoxFit.cover),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 3,
-            child: Column(children: [for (var i = 0; i < items.length; i++) Padding(padding: const EdgeInsets.only(bottom: 8), child: _productCard(t, theme, i, items[i], onProduct, horizontal: true))]),
-          ),
-        ],
+    final bannerAsset = demo.sideBannerImages.length >= variant
+        ? demo.sideBannerImages[variant - 1]
+        : (variant > 1 && demo.subBanners.isNotEmpty ? demo.subBanners.first.image : demo.heroImage);
+    final sectionTitle = variant == 1 ? 'New Products' : 'Featured Products';
+    return EllaContainer(
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final banner = AspectRatio(aspectRatio: 0.72, child: _ellaImage(bannerAsset, fit: BoxFit.cover));
+          final list = Column(
+            children: [
+              EllaSectionHeader(t: t, title: sectionTitle, viewAll: 'View All'),
+              for (var i = 0; i < items.length; i++)
+                Padding(padding: const EdgeInsets.only(bottom: 8), child: _productCard(t, theme, i, items[i], onProduct, horizontal: true)),
+            ],
+          );
+          if (c.maxWidth < 720) {
+            return Column(children: [banner, const SizedBox(height: 12), list]);
+          }
+          if (variant > 1) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 3, child: list),
+                const SizedBox(width: 12),
+                Expanded(flex: 2, child: banner),
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 2, child: banner),
+              const SizedBox(width: 12),
+              Expanded(flex: 3, child: list),
+            ],
+          );
+        },
       ),
     );
   }
 
   static Widget spotlight(StoreThemeData t, StoreTheme theme) {
     final demo = ellaDemoContent(theme);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: Row(
+    final items = demo.spotlights.isNotEmpty
+        ? demo.spotlights
+        : [
+            for (final s in ellaDemoSpotlights) EllaSpotlight(image: demo.subBanners.first.image, title: s.$1, description: s.$2),
+          ];
+
+    return EllaContainer(
+      child: Column(
         children: [
-          for (var i = 0; i < ellaDemoSpotlights.length; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(t.cardRadius),
-                child: Stack(
+          EllaSectionHeader(t: t, title: 'Featured On Ella'),
+          LayoutBuilder(
+            builder: (context, c) {
+              if (c.maxWidth < 768) {
+                return Column(
                   children: [
-                    AspectRatio(
-                      aspectRatio: 1.4,
-                      child: _ellaImage(demo.subBanners[i % demo.subBanners.length].image, fit: BoxFit.cover),
-                    ),
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 10,
-                      right: 10,
-                      bottom: 10,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(ellaDemoSpotlights[i].$1, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11)),
-                          Text(ellaDemoSpotlights[i].$2, style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 9)),
-                        ],
-                      ),
-                    ),
+                    for (final item in items.take(3)) _spotlightCard(t, item),
                   ],
-                ),
-              ),
-            ),
-          ],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < items.length && i < 3; i++) ...[
+                    if (i > 0) const SizedBox(width: 12),
+                    Expanded(child: _spotlightCard(t, items[i])),
+                  ],
+                ],
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  static Widget brands(StoreThemeData t) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            for (final brand in ellaDemoBrands)
-              Container(
-                width: 72,
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(border: Border.all(color: t.mutedText.withValues(alpha: 0.2)), borderRadius: BorderRadius.circular(t.cardRadius)),
-                child: Text(brand, style: TextStyle(color: t.mutedText, fontWeight: FontWeight.w700, fontSize: 8, letterSpacing: 0.6)),
+  static Widget _spotlightCard(StoreThemeData t, EllaSpotlight item) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        children: [
+          EllaRatioBox(
+            paddingTopPercent: 118.91891891891893,
+            child: _ellaImage(item.image, fit: BoxFit.cover),
+          ),
+          const SizedBox(height: 12),
+          Text(item.title, textAlign: TextAlign.center, style: TextStyle(color: t.primary, fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: 0.6)),
+          const SizedBox(height: 8),
+          Text(item.description, textAlign: TextAlign.center, style: TextStyle(color: t.mutedText, fontSize: 12, height: 1.45)),
+          const SizedBox(height: 12),
+          EllaButton(t: t, label: 'SHOP NOW', compact: true),
+        ],
+      ),
+    );
+  }
+
+  static Widget brands(StoreThemeData t, StoreTheme theme) {
+    final demo = ellaDemoContent(theme);
+    final images = demo.brandImages;
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: t.mutedText.withValues(alpha: 0.15)))),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: EllaContainer(
+        child: images.isNotEmpty
+            ? (images.length == 1
+                ? Center(child: Image.asset(images.first, height: 48, fit: BoxFit.contain, errorBuilder: (_, _, _) => const SizedBox(height: 48)))
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      for (final img in images)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Image.asset(img, height: 36, fit: BoxFit.contain, errorBuilder: (_, _, _) => const SizedBox(height: 36)),
+                          ),
+                        ),
+                    ],
+                  ))
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  for (final brand in ellaDemoBrands)
+                    Expanded(
+                      child: Container(
+                        height: 36,
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(border: Border.all(color: t.mutedText.withValues(alpha: 0.2)), borderRadius: BorderRadius.circular(t.cardRadius)),
+                        child: Text(brand, style: TextStyle(color: t.mutedText, fontWeight: FontWeight.w700, fontSize: 8, letterSpacing: 0.6)),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
-      );
+      ),
+    );
+  }
 
   static Widget icons(StoreThemeData t) {
     const labels = ['Ücretsiz Kargo', 'Güvenli Ödeme', '7/24 Destek'];
@@ -560,23 +795,23 @@ class EllaSections {
 
   static Widget about(StoreThemeData t, StoreTheme theme) {
     final demo = ellaDemoContent(theme);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-      child: Row(
-        children: [
-          Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(t.cardRadius), child: AspectRatio(aspectRatio: 1.2, child: _ellaImage(demo.heroImage, fit: BoxFit.cover)))),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('HAKKIMIZDA', style: TextStyle(color: t.primary, fontWeight: FontWeight.w900, fontSize: 16)),
-                const SizedBox(height: 8),
-                Text(demo.heroSubtitle, style: TextStyle(color: t.mutedText, fontSize: 12, height: 1.45)),
-              ],
-            ),
-          ),
-        ],
+    return EllaContainer(
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final image = ClipRRect(borderRadius: BorderRadius.circular(t.cardRadius), child: AspectRatio(aspectRatio: 1.2, child: _ellaImage(demo.heroImage, fit: BoxFit.cover)));
+          final text = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('HAKKIMIZDA', style: TextStyle(color: t.primary, fontWeight: FontWeight.w900, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text(demo.heroSubtitle, style: TextStyle(color: t.mutedText, fontSize: 12, height: 1.45)),
+            ],
+          );
+          if (c.maxWidth < 640) {
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [image, const SizedBox(height: 12), text]);
+          }
+          return Row(children: [Expanded(child: image), const SizedBox(width: 16), Expanded(child: text)]);
+        },
       ),
     );
   }
@@ -716,46 +951,60 @@ class _ProductCardBody extends ConsumerWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AspectRatio(
-              aspectRatio: 1.2,
+              aspectRatio: 0.75,
               child: EllaSections._productImage(product, theme, index),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(product.sku, style: TextStyle(color: t.mutedText, fontSize: 10, fontWeight: FontWeight.w600)),
-                    if (product.brand != null && product.brand!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(product.brand!, style: TextStyle(color: t.mutedText, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.4)),
-                    ],
-                    const SizedBox(height: 2),
-                    Expanded(child: Text(product.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5, color: t.primary))),
-                    Text(money(product.price, product.currencyCode), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: t.primary)),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      width: double.infinity,
-                      child: EllaButton(
-                        t: t,
-                        label: 'Sepete Ekle',
-                        compact: true,
-                        onPressed: () {
-                          ref.read(cartProvider.notifier).addToCart(product);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${product.name} sepete eklendi'), duration: const Duration(seconds: 1)));
-                        },
-                      ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (product.brand != null && product.brand!.isNotEmpty)
+                    Text(product.brand!, style: TextStyle(color: t.mutedText, fontSize: 10, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(product.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5, height: 1.2, color: t.primary)),
+                  const SizedBox(height: 6),
+                  Text(money(product.price, product.currencyCode), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: t.primary)),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: EllaButton(
+                      t: t,
+                      label: 'Sepete Ekle',
+                      compact: true,
+                      onPressed: () {
+                        ref.read(cartProvider.notifier).addToCart(product);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${product.name} sepete eklendi'), duration: const Duration(seconds: 1)));
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PolicyIconTile extends StatelessWidget {
+  const _PolicyIconTile({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(height: 6),
+        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.4)),
+      ],
     );
   }
 }

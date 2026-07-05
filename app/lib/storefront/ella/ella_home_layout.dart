@@ -28,6 +28,8 @@ class EllaHomeLayout {
 
     final widgets = <Widget>[];
     var heroCount = 0;
+    var sideBannerCount = 0;
+    var carouselCount = 0;
 
     for (final section in t.homeSections) {
       switch (section) {
@@ -57,15 +59,29 @@ class EllaHomeLayout {
         case EllaHomeSection.productGrid:
           widgets.add(EllaSections.productGrid(t, theme, products, gridCols, onProduct));
         case EllaHomeSection.productCarousel:
-          widgets.add(EllaSections.productCarousel(t, theme, products, onProduct));
+          carouselCount++;
+          widgets.add(EllaSections.productCarousel(
+            t,
+            theme,
+            products,
+            onProduct,
+            variant: carouselCount,
+          ));
         case EllaHomeSection.productTab:
           widgets.add(EllaSections.productTab(t, theme, products, onProduct));
         case EllaHomeSection.productSideBanner:
-          widgets.add(EllaSections.productSideBanner(t, theme, products, onProduct));
+          sideBannerCount++;
+          widgets.add(EllaSections.productSideBanner(
+            t,
+            theme,
+            products,
+            onProduct,
+            variant: sideBannerCount,
+          ));
         case EllaHomeSection.spotlight:
           widgets.add(EllaSections.spotlight(t, theme));
         case EllaHomeSection.brands:
-          widgets.add(EllaSections.brands(t));
+          widgets.add(EllaSections.brands(t, theme));
         case EllaHomeSection.icons:
           widgets.add(EllaSections.icons(t));
         case EllaHomeSection.flashSale:
