@@ -1,0 +1,49 @@
+---
+description: Flutter Riverpod mimarisi, performans ve main branch kuralları
+alwaysApply: true
+---
+
+# Flutter mimarisi (Riverpod)
+
+## Zorunlu yığın
+
+- **Durum yönetimi:** `flutter_riverpod` — `provider` paketi kullanılmaz.
+- **Kök:** `ProviderScope` + `ConsumerWidget` / `ConsumerStatefulWidget`.
+- **Servis enjeksiyonu:** `core/providers/service_providers.dart` üzerinden (`b2bServiceProvider`, `apiClientProvider`).
+- **Oturum:** `authProvider` (`NotifierProvider`).
+- **Sepet:** `cartProvider` + türetilmiş `cartCountProvider`, `cartGrandTotalProvider` vb.
+- **UI ayarları:** `appSettingsProvider` (app mode, storefront teması, yönlendirme bayrakları).
+
+## Klasör yapısı
+
+```text
+app/lib/
+  core/
+    enums/          # AppMode, StoreTheme
+    providers/      # Riverpod provider'ları (tek giriş: app_providers.dart)
+  features/         # Yeni özellikler burada (data / domain / presentation)
+  screens/          # Mevcut ekranlar (kademeli features/ taşınması)
+  storefront/       # E-ticaret vitrin modülü
+  services/         # API istemcisi ve B2bService
+  models/           # DTO / view modelleri
+```
+
+Yeni kod **feature-first** yazılır: `features/<ad>/presentation/providers`, `data/repositories`, `domain/entities`.
+
+## Performans kuralları
+
+1. `ref.watch(provider.select(...))` ile dar kapsamlı dinleme — tüm state'i izleme.
+2. Hesaplanan değerler için ayrı `Provider` (ör. `cartCountProvider`).
+3. Liste/API çağrılarında `autoDispose` + `family` tercih et (yeni provider'larda).
+4. `const` constructor ve widget'lar mümkün olduğunca kullan.
+5. Ağır işleri `build()` içinde yapma; `AsyncNotifier` veya `FutureProvider` kullan.
+
+## Git kuralı
+
+**Tüm değişiklikler doğrudan `main` branch'ine commit ve push edilir.** Feature branch açılmaz; PR zorunlu değildir (cloud agent akışı).
+
+## Yapılmaması gerekenler
+
+- `ChangeNotifier` / `Provider` paketi geri getirme.
+- `AppState` gibi tek dev state sınıfı — durum domain'e göre bölünmüş provider'larda kalmalı.
+- Ekranda doğrudan `http` veya `ApiClient` oluşturma — her zaman provider üzerinden.

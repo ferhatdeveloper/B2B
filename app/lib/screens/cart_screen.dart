@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../services/b2b_service.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 
-class CartScreen extends StatefulWidget {
+class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key, required this.onContinueShopping});
   final VoidCallback onContinueShopping;
 
   @override
-  State<CartScreen> createState() => _CartScreenState();
+  ConsumerState<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
+class _CartScreenState extends ConsumerState<CartScreen> {
   final _note = TextEditingController();
   bool _placing = false;
 
@@ -27,7 +27,7 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> _checkout() async {
     setState(() => _placing = true);
     try {
-      final orderNo = await context.read<AppState>().checkout(note: _note.text.trim());
+      final orderNo = await ref.read(cartProvider.notifier).checkout(note: _note.text.trim());
       if (!mounted) return;
       _note.clear();
       showDialog(
@@ -55,8 +55,10 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppState>();
-    final cart = app.cart;
+    final cart = ref.watch(cartProvider);
+    final subtotal = ref.watch(cartSubtotalProvider);
+    final tax = ref.watch(cartTaxProvider);
+    final grandTotal = ref.watch(cartGrandTotalProvider);
 
     if (cart.isEmpty) {
       return Center(
@@ -79,24 +81,33 @@ class _CartScreenState extends State<CartScreen> {
       );
     }
 
-    final wide = MediaQuery.of(context).size.width >= 900;
     final list = ListView.separated(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       itemCount: cart.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (_, i) => _CartLineTile(line: cart[i]),
     );
-    final summary = _SummaryCard(app: app, note: _note, placing: _placing, onCheckout: _checkout);
 
+    final summary = _SummaryCard(
+      subtotal: subtotal,
+      tax: tax,
+      grandTotal: grandTotal,
+      note: _note,
+      placing: _placing,
+      onCheckout: _checkout,
+    );
+
+    final wide = MediaQuery.of(context).size.width >= 900;
     if (wide) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(flex: 3, child: list),
-          SizedBox(width: 340, child: Padding(padding: const EdgeInsets.fromLTRB(0, 20, 20, 20), child: summary)),
+          SizedBox(width: 360, child: summary),
         ],
       );
     }
+
     return Column(
       children: [
         Expanded(child: list),
@@ -106,13 +117,13 @@ class _CartScreenState extends State<CartScreen> {
   }
 }
 
-class _CartLineTile extends StatelessWidget {
+class _CartLineTile extends ConsumerWidget {
   const _CartLineTile({required this.line});
   final CartLine line;
 
   @override
-  Widget build(BuildContext context) {
-    final app = context.read<AppState>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cart = ref.read(cartProvider.notifier);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -144,7 +155,7 @@ class _CartLineTile extends StatelessWidget {
             ),
             _QtyStepper(
               qty: line.qty,
-              onChanged: (q) => app.setQty(line.product.id, q),
+              onChanged: (q) => cart.setQty(line.product.id, q),
             ),
             const SizedBox(width: 8),
             SizedBox(
@@ -154,7 +165,7 @@ class _CartLineTile extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline, color: AppColors.danger),
-              onPressed: () => app.removeFromCart(line.product.id),
+              onPressed: () => cart.removeFromCart(line.product.id),
             ),
           ],
         ),
@@ -188,8 +199,18 @@ class _QtyStepper extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.app, required this.note, required this.placing, required this.onCheckout});
-  final AppState app;
+  const _SummaryCard({
+    required this.subtotal,
+    required this.tax,
+    required this.grandTotal,
+    required this.note,
+    required this.placing,
+    required this.onCheckout,
+  });
+
+  final double subtotal;
+  final double tax;
+  final double grandTotal;
   final TextEditingController note;
   final bool placing;
   final VoidCallback onCheckout;
@@ -205,11 +226,11 @@ class _SummaryCard extends StatelessWidget {
           children: [
             const Text('Sipariş Özeti', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
             const SizedBox(height: 14),
-            _row('Ara Toplam', money(app.cartSubtotal)),
+            _row('Ara Toplam', money(subtotal)),
             const SizedBox(height: 8),
-            _row('KDV', money(app.cartTax)),
+            _row('KDV', money(tax)),
             const Divider(height: 24),
-            _row('Genel Toplam', money(app.cartGrandTotal), bold: true),
+            _row('Genel Toplam', money(grandTotal), bold: true),
             const SizedBox(height: 14),
             TextField(
               controller: note,

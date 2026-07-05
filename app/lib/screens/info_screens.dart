@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../widgets/async_list.dart';
 
-class CampaignsScreen extends StatelessWidget {
+class CampaignsScreen extends ConsumerWidget {
   const CampaignsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final svc = context.read<AppState>().service;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final svc = ref.read(b2bServiceProvider);
     return AsyncList<Campaign>(
       loader: () => svc.campaigns(),
       emptyMessage: 'Aktif kampanya bulunamadı.',
@@ -52,12 +52,12 @@ class CampaignsScreen extends StatelessWidget {
   }
 }
 
-class AnnouncementsScreen extends StatelessWidget {
+class AnnouncementsScreen extends ConsumerWidget {
   const AnnouncementsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final svc = context.read<AppState>().service;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final svc = ref.read(b2bServiceProvider);
     return AsyncList<Announcement>(
       loader: () => svc.announcements(),
       emptyMessage: 'Duyuru bulunamadı.',

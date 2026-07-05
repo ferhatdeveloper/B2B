@@ -1,5 +1,10 @@
 # AGENTS.md
 
+## Depo kuralları
+
+- **Git:** Tüm agent değişiklikleri doğrudan `main` branch'ine commit ve `git push origin main` ile yüklenir.
+- **Flutter:** Durum yönetimi yalnızca **Riverpod** (`flutter_riverpod`). Ayrıntılar: `.cursor/rules/flutter-riverpod-architecture.mdc`.
+
 ## Cursor Cloud specific instructions
 
 ### What this project is
@@ -16,11 +21,14 @@ Ayrıca `src/` altında yalnızca tip-kontrolü yapılan (çalıştırılmayan) 
 - **E-ticaret sitesi (storefront)** — herkese açık, misafir alışveriş (`app/lib/storefront/`). Varsayılan açılış budur; siparişler `retail` carisine `channel='storefront'` ile yazılır. 4 tema: **Zetem** (varsayılan, zetem.co.uk tarzı temiz cyan B2B), Minimal, Modern, Bold (sağ üstteki palet ikonu veya Ayarlar'dan seçilir). İki katmanlı header (üst destek/Bayi Girişi barı + logo/arama/sepet) + kategori nav + hero + kategori kartları + ürün grid + üç sütun footer. Sağ üstte **"Bayi Girişi"** bayi paneline götürür.
 - **Bayi paneli (panel)** — giriş gerektirir: dashboard, ürün kataloğu, favoriler, kampanyalar, duyurular, sepet/sipariş, bekleyen/önceki siparişler, ödeme (Stripe), ödemelerim, cari ekstre, ödenmemiş faturalar, çek/senet, faturalanmamış irsaliyeler, sevk adresleri, cari hesap, **Ayarlar**.
 
-Açılış modu (E-ticaret/Panel) ve storefront teması **Ayarlar › Site Görünümü**'nden seçilir ve `localStorage`'da saklanır (`AppState.appMode`/`storeTheme`). Giriş yapan kullanıcı paneli, misafir ise storefront'u görür; panelden "E-ticaret sitesini önizle" ile storefront önizlenebilir.
+Açılış modu (E-ticaret/Panel) ve storefront teması **Ayarlar › Site Görünümü**'nden seçilir ve `localStorage`'da saklanır (`appSettingsProvider`). Giriş yapan kullanıcı paneli, misafir ise storefront'u görür; panelden "E-ticaret sitesini önizle" ile storefront önizlenebilir.
 
 `server/` altında bir **Node/Express entegrasyon servisi** bulunur (port 4000): Stripe ödeme (Checkout) ve **Logo Object REST Service** senkronizasyonu (ürün/cari). Gerçek `STRIPE_SECRET_KEY` / `LOGO_BASE_URL` verilmezse otomatik **mock modda** çalışır (yerelde uçtan uca demo için).
 
 ### Flutter uygulaması (`app/`)
+
+**Mimari:** Riverpod 2.x — `ProviderScope`, `core/providers/` (auth, cart, app settings, b2b service). Ekranlar `ConsumerWidget` / `ConsumerStatefulWidget`. Yeni özellikler `features/<ad>/` altında feature-first eklenir. Performans: `select`, türetilmiş provider'lar, `const` widget'lar.
+
 - Flutter SDK `/opt/flutter-sdk/bin` altındadır ve `~/.bashrc` ile PATH'e eklenmiştir; web hedefi etkindir (`flutter config --enable-web`). Android/Linux-desktop toolchain'leri kurulu DEĞİLDİR; sadece **web** (Chrome) hedefi çalışır.
 - Geliştirme sunucusu: `cd app && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0 --dart-define=POSTGREST_URL=http://localhost:3002`. Tarayıcıda `http://localhost:8080`.
 - API tabanı `POSTGREST_URL` dart-define ile verilir (varsayılan `http://localhost:3002`, bkz. `app/lib/config/api_config.dart`).

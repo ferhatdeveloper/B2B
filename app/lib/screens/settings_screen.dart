@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/api_config.dart';
-import '../state/app_state.dart';
+import '../core/enums/app_enums.dart';
+import '../core/providers/app_providers.dart';
 import '../theme.dart';
 
 /// Ayarlar — configure the Logo Object REST Service connection (and view other
 /// integration settings) from inside the app. Secrets are stored server-side
 /// and only their presence is reported back to the client.
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _baseUrl = TextEditingController();
   final _username = TextEditingController();
   final _password = TextEditingController();
@@ -48,7 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final s = await context.read<AppState>().service.getSettings();
+      final s = await ref.read(b2bServiceProvider).getSettings();
       final logo = (s['logo'] as Map?) ?? {};
       _baseUrl.text = logo['baseUrl']?.toString() ?? '';
       _username.text = logo['username']?.toString() ?? '';
@@ -90,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _message = null;
     });
     try {
-      final s = await context.read<AppState>().service.saveLogoSettings(_payload());
+      final s = await ref.read(b2bServiceProvider).saveLogoSettings(_payload());
       if (mounted) {
         setState(() {
           _settings = s;
@@ -109,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _busy = true;
       _message = null;
     });
-    final svc = context.read<AppState>().service;
+    final svc = ref.read(b2bServiceProvider);
     try {
       await svc.saveLogoSettings(_payload());
       final r = await svc.testLogo();
@@ -130,7 +131,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _message = null;
     });
     try {
-      final r = await context.read<AppState>().service.syncLogo();
+      final r = await ref.read(b2bServiceProvider).syncLogo();
       if (mounted) setState(() => _setMessage('Senkron tamam (${r['mode']}): ${r['products']} ürün, ${r['customers']} cari.', true));
     } catch (e) {
       if (mounted) setState(() => _setMessage('Senkron başarısız: $e', false));
@@ -292,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 }
 
-class _AppearanceCard extends StatelessWidget {
+class _AppearanceCard extends ConsumerWidget {
   String _themeLabel(StoreTheme t) => switch (t) {
         StoreTheme.zetem => 'Zetem',
         StoreTheme.minimal => 'Minimal',
@@ -301,8 +302,8 @@ class _AppearanceCard extends StatelessWidget {
       };
 
   @override
-  Widget build(BuildContext context) {
-    final app = context.watch<AppState>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsProvider);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -327,8 +328,8 @@ class _AppearanceCard extends StatelessWidget {
                 ButtonSegment(value: AppMode.storefront, label: Text('E-Ticaret Sitesi'), icon: Icon(Icons.storefront)),
                 ButtonSegment(value: AppMode.panel, label: Text('Bayi Paneli'), icon: Icon(Icons.dashboard)),
               ],
-              selected: {app.appMode},
-              onSelectionChanged: (s) => context.read<AppState>().setAppMode(s.first),
+              selected: {settings.appMode},
+              onSelectionChanged: (s) => ref.read(appSettingsProvider.notifier).setAppMode(s.first),
             ),
             const SizedBox(height: 18),
             const Text('E-ticaret teması', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -339,17 +340,17 @@ class _AppearanceCard extends StatelessWidget {
                 for (final th in StoreTheme.values)
                   ChoiceChip(
                     label: Text(_themeLabel(th)),
-                    selected: app.storeTheme == th,
-                    onSelected: (_) => context.read<AppState>().setStoreTheme(th),
+                    selected: settings.storeTheme == th,
+                    onSelected: (_) => ref.read(appSettingsProvider.notifier).setStoreTheme(th),
                     selectedColor: AppColors.brand,
-                    labelStyle: TextStyle(color: app.storeTheme == th ? Colors.white : const Color(0xFF334155), fontWeight: FontWeight.w600),
+                    labelStyle: TextStyle(color: settings.storeTheme == th ? Colors.white : const Color(0xFF334155), fontWeight: FontWeight.w600),
                     showCheckmark: false,
                   ),
               ],
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
-              onPressed: () => context.read<AppState>().previewStorefront(),
+              onPressed: () => ref.read(appSettingsProvider.notifier).previewStorefront(),
               icon: const Icon(Icons.visibility_outlined),
               label: const Text('E-ticaret sitesini önizle'),
             ),

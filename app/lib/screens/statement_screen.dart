@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../utils/web_download.dart';
@@ -14,22 +14,22 @@ import '../utils/web_download.dart';
 /// three summary cards (Toplam Alacak / Toplam Borç / Bakiye), Excel + PDF
 /// export, a search box, and a Tarih / Fiş No / İşlem / Açıklama / Borç /
 /// Alacak / Bakiye table.
-class StatementScreen extends StatefulWidget {
+class StatementScreen extends ConsumerStatefulWidget {
   const StatementScreen({super.key});
 
   @override
-  State<StatementScreen> createState() => _StatementScreenState();
+  ConsumerState<StatementScreen> createState() => _StatementScreenState();
 }
 
-class _StatementScreenState extends State<StatementScreen> {
+class _StatementScreenState extends ConsumerState<StatementScreen> {
   late Future<List<StatementRow>> _future;
   String _query = '';
 
   @override
   void initState() {
     super.initState();
-    final app = context.read<AppState>();
-    _future = app.service.statement(app.user?.customerId ?? '');
+    final customerId = ref.read(authProvider)?.customerId ?? '';
+    _future = ref.read(b2bServiceProvider).statement(customerId);
   }
 
   List<StatementRow> _filter(List<StatementRow> rows) {

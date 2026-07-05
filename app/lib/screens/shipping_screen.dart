@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 
-class ShippingAddressesScreen extends StatefulWidget {
+class ShippingAddressesScreen extends ConsumerStatefulWidget {
   const ShippingAddressesScreen({super.key});
 
   @override
-  State<ShippingAddressesScreen> createState() => _ShippingAddressesScreenState();
+  ConsumerState<ShippingAddressesScreen> createState() => _ShippingAddressesScreenState();
 }
 
-class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
+class _ShippingAddressesScreenState extends ConsumerState<ShippingAddressesScreen> {
   late Future<List<ShippingAddress>> _future;
 
-  String get _cid => context.read<AppState>().user?.customerId ?? '';
+  String get _cid => ref.read(authProvider)?.customerId ?? '';
 
   @override
   void initState() {
     super.initState();
-    _future = context.read<AppState>().service.shippingAddresses(_cid);
+    _future = ref.read(b2bServiceProvider).shippingAddresses(_cid);
   }
 
-  void _reload() => setState(() => _future = context.read<AppState>().service.shippingAddresses(_cid));
+  void _reload() => setState(() => _future = ref.read(b2bServiceProvider).shippingAddresses(_cid));
 
   Future<void> _addDialog() async {
     final title = TextEditingController();
@@ -51,7 +51,7 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
           FilledButton(
             onPressed: () async {
               if (title.text.trim().isEmpty || line.text.trim().isEmpty) return;
-              await context.read<AppState>().service.addShippingAddress(
+              await ref.read(b2bServiceProvider).addShippingAddress(
                     _cid,
                     title: title.text.trim(),
                     addressLine: line.text.trim(),

@@ -1,33 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 
-class AccountScreen extends StatefulWidget {
+class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
 
   @override
-  State<AccountScreen> createState() => _AccountScreenState();
+  ConsumerState<AccountScreen> createState() => _AccountScreenState();
 }
 
-class _AccountScreenState extends State<AccountScreen> {
+class _AccountScreenState extends ConsumerState<AccountScreen> {
   late Future<DashboardSummary?> _future;
 
   @override
   void initState() {
     super.initState();
-    final app = context.read<AppState>();
-    _future = app.user?.customerId == null
+    final user = ref.read(authProvider)!;
+    _future = user.customerId == null
         ? Future.value(null)
-        : app.service.dashboard(app.user!.customerId!);
+        : ref.read(b2bServiceProvider).dashboard(user.customerId!);
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AppState>().user!;
+    final user = ref.watch(authProvider)!;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [

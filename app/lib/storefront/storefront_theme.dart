@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../state/app_state.dart';
+import '../core/enums/app_enums.dart';
 
 /// Visual configuration for a storefront theme. The three variants are
 /// inspired by popular ecommerce templates: a clean Minimal (Kalles/Minimog),

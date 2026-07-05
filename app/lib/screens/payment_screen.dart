@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../state/app_state.dart';
+import '../core/providers/app_providers.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 
-class PaymentScreen extends StatefulWidget {
+class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({super.key});
 
   @override
-  State<PaymentScreen> createState() => _PaymentScreenState();
+  ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> {
+class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   final _amount = TextEditingController();
   bool _loading = false;
   String? _error;
@@ -35,10 +35,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _error = null;
     });
     try {
-      final app = context.read<AppState>();
-      final url = await app.service.startPayment(customerId: app.user!.customerId!, amount: amount);
-      // Standard Stripe Checkout: full-page redirect in the same tab. The
-      // session is persisted, so the user returns logged in after payment.
+      final user = ref.read(authProvider)!;
+      final url = await ref.read(b2bServiceProvider).startPayment(customerId: user.customerId!, amount: amount);
       final ok = await launchUrl(Uri.parse(url), webOnlyWindowName: '_self');
       if (!ok) throw Exception('Ödeme sayfası açılamadı.');
     } catch (e) {
@@ -50,7 +48,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AppState>().user!;
+    final user = ref.watch(authProvider)!;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

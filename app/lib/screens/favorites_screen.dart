@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../widgets/product_card.dart';
 
-class FavoritesScreen extends StatefulWidget {
+class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
 
   @override
-  State<FavoritesScreen> createState() => _FavoritesScreenState();
+  ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
-class _FavoritesScreenState extends State<FavoritesScreen> {
+class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   late Future<List<Product>> _future;
 
   @override
   void initState() {
     super.initState();
-    final app = context.read<AppState>();
-    _future = app.service.favoriteProducts(app.user?.customerId ?? '');
+    final customerId = ref.read(authProvider)?.customerId ?? '';
+    _future = ref.read(b2bServiceProvider).favoriteProducts(customerId);
   }
 
   @override
@@ -49,7 +49,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           itemBuilder: (_, i) => ProductCard(
             product: products[i],
             onAdd: () {
-              context.read<AppState>().addToCart(products[i]);
+              ref.read(cartProvider.notifier).addToCart(products[i]);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('${products[i].name} sepete eklendi'), duration: const Duration(seconds: 1)),
               );

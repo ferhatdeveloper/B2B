@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 
-class OrdersScreen extends StatefulWidget {
+class OrdersScreen extends ConsumerStatefulWidget {
   const OrdersScreen({super.key, this.status, this.emptyMessage = 'Henüz sipariş bulunmuyor.'});
 
-  /// Optional status filter ("pending", "completed", ...). Null = all orders.
   final String? status;
   final String emptyMessage;
 
   @override
-  State<OrdersScreen> createState() => _OrdersScreenState();
+  ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> {
+class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   late Future<List<OrderRow>> _future;
 
   @override
@@ -27,8 +26,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Future<List<OrderRow>> _load() {
-    final app = context.read<AppState>();
-    return app.service.orders(app.user!.customerId ?? '', status: widget.status);
+    final customerId = ref.read(authProvider)!.customerId ?? '';
+    return ref.read(b2bServiceProvider).orders(customerId, status: widget.status);
   }
 
   Color _statusColor(String s) => switch (s) {

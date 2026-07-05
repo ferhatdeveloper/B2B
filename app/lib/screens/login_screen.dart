@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../state/app_state.dart';
+import '../core/enums/app_enums.dart';
+import '../core/providers/app_providers.dart';
 import '../theme.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _username = TextEditingController(text: 'demo');
   final _password = TextEditingController(text: '1234');
   bool _loading = false;
@@ -31,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      final ok = await context.read<AppState>().login(_username.text.trim(), _password.text);
+      final ok = await ref.read(authProvider.notifier).login(_username.text.trim(), _password.text);
       if (!ok && mounted) {
         setState(() => _error = 'Kullanıcı adı veya parola hatalı.');
       }
@@ -109,6 +110,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildForm({bool compactBrand = false}) {
+    final appMode = ref.watch(appSettingsProvider.select((s) => s.appMode));
+
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
@@ -128,11 +131,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
               ],
-              if (context.read<AppState>().appMode == AppMode.storefront)
+              if (appMode == AppMode.storefront)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: TextButton.icon(
-                    onPressed: () => context.read<AppState>().backToStorefront(),
+                    onPressed: () => ref.read(appSettingsProvider.notifier).backToStorefront(),
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     icon: const Icon(Icons.arrow_back, size: 18),
                     label: const Text('Mağazaya dön'),

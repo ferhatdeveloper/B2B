@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../state/app_state.dart';
+import '../core/providers/app_providers.dart';
 import '../theme.dart';
 import '../utils/app_location.dart';
 import 'account_screen.dart';
@@ -25,14 +25,14 @@ class NavItem {
   final WidgetBuilder builder;
 }
 
-class HomeShell extends StatefulWidget {
+class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
 
   @override
-  State<HomeShell> createState() => _HomeShellState();
+  ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -85,9 +85,10 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppState>();
+    final userName = ref.watch(authProvider.select((u) => u?.fullName ?? ''));
+    final cartCount = ref.watch(cartCountProvider);
     final wide = MediaQuery.of(context).size.width >= 1000;
-    final nav = _NavList(items: _items, index: _index, onSelect: _go, user: app.user?.fullName ?? '');
+    final nav = _NavList(items: _items, index: _index, onSelect: _go, user: userName);
 
     return Scaffold(
       key: _scaffoldKey,
@@ -101,10 +102,10 @@ class _HomeShellState extends State<HomeShell> {
                 _TopBar(
                   title: _items[_index].label,
                   showMenu: !wide,
-                  cartCount: app.cartCount,
+                  cartCount: cartCount,
                   onMenu: () => _scaffoldKey.currentState?.openDrawer(),
                   onCart: () => _go(5),
-                  onLogout: () => context.read<AppState>().logout(),
+                  onLogout: () => ref.read(authProvider.notifier).logout(),
                 ),
                 Expanded(child: Builder(builder: _items[_index].builder)),
               ],

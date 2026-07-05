@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../widgets/async_list.dart';
 
-String _cid(BuildContext c) => c.read<AppState>().user?.customerId ?? '';
-
-class PaymentsListScreen extends StatelessWidget {
+class PaymentsListScreen extends ConsumerWidget {
   const PaymentsListScreen({super.key});
 
   Color _c(String s) => switch (s) {
@@ -19,10 +17,11 @@ class PaymentsListScreen extends StatelessWidget {
       };
 
   @override
-  Widget build(BuildContext context) {
-    final svc = context.read<AppState>().service;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final svc = ref.read(b2bServiceProvider);
+    final customerId = ref.watch(authProvider.select((u) => u?.customerId ?? ''));
     return AsyncList<PaymentRow>(
-      loader: () => svc.payments(_cid(context)),
+      loader: () => svc.payments(customerId),
       emptyMessage: 'Ödeme kaydı bulunamadı.',
       emptyIcon: Icons.payments_outlined,
       itemBuilder: (context, p) => RecordCard(
@@ -38,14 +37,15 @@ class PaymentsListScreen extends StatelessWidget {
   }
 }
 
-class InvoicesScreen extends StatelessWidget {
+class InvoicesScreen extends ConsumerWidget {
   const InvoicesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final svc = context.read<AppState>().service;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final svc = ref.read(b2bServiceProvider);
+    final customerId = ref.watch(authProvider.select((u) => u?.customerId ?? ''));
     return AsyncList<InvoiceRow>(
-      loader: () => svc.openInvoices(_cid(context)),
+      loader: () => svc.openInvoices(customerId),
       emptyMessage: 'Ödenmemiş fatura bulunamadı.',
       emptyIcon: Icons.description_outlined,
       itemBuilder: (context, i) => RecordCard(
@@ -61,14 +61,15 @@ class InvoicesScreen extends StatelessWidget {
   }
 }
 
-class ChecksScreen extends StatelessWidget {
+class ChecksScreen extends ConsumerWidget {
   const ChecksScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final svc = context.read<AppState>().service;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final svc = ref.read(b2bServiceProvider);
+    final customerId = ref.watch(authProvider.select((u) => u?.customerId ?? ''));
     return AsyncList<CheckNoteRow>(
-      loader: () => svc.checksNotes(_cid(context)),
+      loader: () => svc.checksNotes(customerId),
       emptyMessage: 'Çek/senet bulunamadı.',
       emptyIcon: Icons.account_balance_outlined,
       itemBuilder: (context, c) => RecordCard(
@@ -84,14 +85,15 @@ class ChecksScreen extends StatelessWidget {
   }
 }
 
-class DispatchesScreen extends StatelessWidget {
+class DispatchesScreen extends ConsumerWidget {
   const DispatchesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final svc = context.read<AppState>().service;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final svc = ref.read(b2bServiceProvider);
+    final customerId = ref.watch(authProvider.select((u) => u?.customerId ?? ''));
     return AsyncList<DispatchRow>(
-      loader: () => svc.unbilledDispatches(_cid(context)),
+      loader: () => svc.unbilledDispatches(customerId),
       emptyMessage: 'Faturalanmamış irsaliye bulunamadı.',
       emptyIcon: Icons.local_shipping_outlined,
       itemBuilder: (context, d) => RecordCard(

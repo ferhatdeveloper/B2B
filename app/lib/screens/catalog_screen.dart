@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/product_card.dart';
 
-class CatalogScreen extends StatefulWidget {
+class CatalogScreen extends ConsumerStatefulWidget {
   const CatalogScreen({super.key});
 
   @override
-  State<CatalogScreen> createState() => _CatalogScreenState();
+  ConsumerState<CatalogScreen> createState() => _CatalogScreenState();
 }
 
-class _CatalogScreenState extends State<CatalogScreen> {
+class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   final _searchCtrl = TextEditingController();
   String _search = '';
   String? _categorySlug;
@@ -35,13 +35,13 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   Future<void> _loadCategories() async {
     try {
-      final cats = await context.read<AppState>().service.categories();
+      final cats = await ref.read(b2bServiceProvider).categories();
       if (mounted) setState(() => _categories = cats);
     } catch (_) {/* ignore */}
   }
 
   Future<List<Product>> _loadProducts() {
-    return context.read<AppState>().service.products(
+    return ref.read(b2bServiceProvider).products(
           search: _search.isEmpty ? null : _search,
           categorySlug: _categorySlug,
           limit: 100,
@@ -143,7 +143,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 itemBuilder: (_, i) => ProductCard(
                   product: products[i],
                   onAdd: () {
-                    context.read<AppState>().addToCart(products[i]);
+                    ref.read(cartProvider.notifier).addToCart(products[i]);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('${products[i].name} sepete eklendi'), duration: const Duration(seconds: 1)),
                     );

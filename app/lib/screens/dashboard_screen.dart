@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../widgets/product_card.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key, required this.onSeeAllProducts});
   final VoidCallback onSeeAllProducts;
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   late Future<_DashboardData> _future;
 
   @override
@@ -30,7 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_syncing) return;
     setState(() => _syncing = true);
     try {
-      final res = await context.read<AppState>().service.syncLogo();
+      final res = await ref.read(b2bServiceProvider).syncLogo();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Logo senkronu tamam: ${res['products']} ürün, ${res['customers']} cari (${res['mode']})')),
@@ -47,9 +47,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<_DashboardData> _load() async {
-    final app = context.read<AppState>();
-    final svc = app.service;
-    final user = app.user!;
+    final svc = ref.read(b2bServiceProvider);
+    final user = ref.read(authProvider)!;
     final results = await Future.wait([
       user.customerId != null ? svc.dashboard(user.customerId!) : Future.value(null),
       svc.products(flag: 'is_featured', limit: 8),
@@ -66,8 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.read<AppState>();
-    final user = app.user!;
+    final user = ref.watch(authProvider)!;
     return FutureBuilder<_DashboardData>(
       future: _future,
       builder: (context, snap) {
@@ -319,7 +317,7 @@ class _ProductRow extends StatelessWidget {
           child: ProductCard(
             product: products[i],
             onAdd: () {
-              context.read<AppState>().addToCart(products[i]);
+              ref.read(cartProvider.notifier).addToCart(products[i]);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('${products[i].name} sepete eklendi'), duration: const Duration(seconds: 1)),
               );

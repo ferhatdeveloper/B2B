@@ -35,6 +35,13 @@ curl -X POST "http://localhost:3002/rpc/verify_login" \
 ## Dosya yapısı
 
 ```text
+app/lib/
+  core/enums/           # AppMode, StoreTheme
+  core/providers/       # Riverpod (auth, cart, settings, service)
+  features/             # Yeni modüller (feature-first)
+  screens/              # Bayi paneli ekranları
+  storefront/           # E-ticaret vitrin
+  services/             # PostgREST istemcisi
 config/
   postgrest.conf
   postgrest.env.example

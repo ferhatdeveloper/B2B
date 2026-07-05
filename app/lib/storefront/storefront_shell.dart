@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/enums/app_enums.dart';
+import '../core/providers/app_providers.dart';
 import '../models/models.dart';
-import '../state/app_state.dart';
+import '../services/b2b_service.dart';
 import '../utils/format.dart';
 import 'storefront_theme.dart';
 
 /// Public e-commerce storefront (B2C/C2C). Guests can browse and place orders.
 /// Layout inspired by clean B2B supply stores (e.g. zetem.co.uk): two-tier
 /// header, category strip, product grid, three-column footer.
-class StorefrontShell extends StatefulWidget {
+class StorefrontShell extends ConsumerStatefulWidget {
   const StorefrontShell({super.key});
 
   @override
-  State<StorefrontShell> createState() => _StorefrontShellState();
+  ConsumerState<StorefrontShell> createState() => _StorefrontShellState();
 }
 
-class _StorefrontShellState extends State<StorefrontShell> {
+class _StorefrontShellState extends ConsumerState<StorefrontShell> {
   final _searchCtrl = TextEditingController();
   String _search = '';
   String? _categorySlug;
@@ -36,7 +38,7 @@ class _StorefrontShellState extends State<StorefrontShell> {
     super.dispose();
   }
 
-  Future<List<Product>> _load() => context.read<AppState>().service.products(
+  Future<List<Product>> _load() => ref.read(b2bServiceProvider).products(
         search: _search.isEmpty ? null : _search,
         categorySlug: _categorySlug,
         limit: 100,
@@ -44,7 +46,7 @@ class _StorefrontShellState extends State<StorefrontShell> {
 
   Future<void> _loadCats() async {
     try {
-      final c = await context.read<AppState>().service.categories();
+      final c = await ref.read(b2bServiceProvider).categories();
       if (mounted) setState(() => _categories = c);
     } catch (_) {}
   }
@@ -53,8 +55,10 @@ class _StorefrontShellState extends State<StorefrontShell> {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppState>();
-    final t = storeThemeData(app.storeTheme);
+    final storeTheme = ref.watch(appSettingsProvider.select((s) => s.storeTheme));
+    final cartCount = ref.watch(cartCountProvider);
+    final isLoggedIn = ref.watch(isLoggedInProvider);
+    final t = storeThemeData(storeTheme);
     final width = MediaQuery.of(context).size.width;
     final cols = width >= 1280 ? 5 : width >= 1000 ? 4 : width >= 680 ? 3 : 2;
 
@@ -62,8 +66,8 @@ class _StorefrontShellState extends State<StorefrontShell> {
       backgroundColor: t.scaffoldBg,
       body: Column(
         children: [
-          _UtilityBar(t: t, isPreview: app.isLoggedIn),
-          _MainHeader(t: t, cartCount: app.cartCount, searchCtrl: _searchCtrl, onSearch: (v) {
+          _UtilityBar(t: t, isPreview: isLoggedIn),
+          _MainHeader(t: t, cartCount: cartCount, searchCtrl: _searchCtrl, onSearch: (v) {
             _search = v.trim();
             _refresh();
           }, onCart: () => _openCart(context, t)),
@@ -167,7 +171,7 @@ class _StorefrontShellState extends State<StorefrontShell> {
                     FilledButton.icon(
                       style: FilledButton.styleFrom(backgroundColor: t.accent),
                       onPressed: () {
-                        context.read<AppState>().addToCart(p);
+                        ref.read(cartProvider.notifier).addToCart(p);
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.name} sepete eklendi'), duration: const Duration(seconds: 1)));
                       },
@@ -194,14 +198,14 @@ class _StorefrontShellState extends State<StorefrontShell> {
   }
 }
 
-class _UtilityBar extends StatelessWidget {
+class _UtilityBar extends ConsumerWidget {
   const _UtilityBar({required this.t, required this.isPreview});
   final StoreThemeData t;
   final bool isPreview;
 
   @override
-  Widget build(BuildContext context) {
-    final app = context.read<AppState>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.read(appSettingsProvider.notifier);
     final bar = t.darkHeader ? Colors.black.withValues(alpha: 0.2) : const Color(0xFFEFF3F5);
     final fg = t.darkHeader ? Colors.white70 : const Color(0xFF4B5563);
     final narrow = MediaQuery.of(context).size.width < 620;
@@ -215,7 +219,7 @@ class _UtilityBar extends StatelessWidget {
           if (!narrow) Text('Destek: +90 850 000 00 00', style: TextStyle(color: fg, fontSize: 12)),
           const Spacer(),
           TextButton.icon(
-            onPressed: () => isPreview ? app.exitStorefrontPreview() : app.requestDealerLogin(),
+            onPressed: () => isPreview ? settings.exitStorefrontPreview() : settings.requestDealerLogin(),
             style: TextButton.styleFrom(foregroundColor: t.darkHeader ? Colors.white : t.primary, padding: const EdgeInsets.symmetric(horizontal: 8)),
             icon: Icon(isPreview ? Icons.dashboard : Icons.store_mall_directory, size: 16),
             label: Text(isPreview ? 'Panele Dön' : 'Bayi Girişi', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
@@ -226,7 +230,7 @@ class _UtilityBar extends StatelessWidget {
   }
 }
 
-class _MainHeader extends StatelessWidget {
+class _MainHeader extends ConsumerWidget {
   const _MainHeader({required this.t, required this.cartCount, required this.searchCtrl, required this.onSearch, required this.onCart});
   final StoreThemeData t;
   final int cartCount;
@@ -235,8 +239,8 @@ class _MainHeader extends StatelessWidget {
   final VoidCallback onCart;
 
   @override
-  Widget build(BuildContext context) {
-    final app = context.read<AppState>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.read(appSettingsProvider.notifier);
     final width = MediaQuery.of(context).size.width;
     final showSearch = width >= 720;
     final fg = t.headerFg;
@@ -282,7 +286,7 @@ class _MainHeader extends StatelessWidget {
             PopupMenuButton<StoreTheme>(
               tooltip: 'Tema seç',
               icon: Icon(Icons.palette_outlined, color: fg),
-              onSelected: app.setStoreTheme,
+              onSelected: settings.setStoreTheme,
               itemBuilder: (_) => [
                 for (final th in StoreTheme.values) PopupMenuItem(value: th, child: Text(storeThemeData(th).label)),
               ],
@@ -451,14 +455,14 @@ class _CategoryCards extends StatelessWidget {
   }
 }
 
-class _StoreProductCard extends StatelessWidget {
+class _StoreProductCard extends ConsumerWidget {
   const _StoreProductCard({required this.t, required this.product, required this.onTap});
   final StoreThemeData t;
   final Product product;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return InkWell(
       borderRadius: BorderRadius.circular(t.cardRadius),
       onTap: onTap,
@@ -501,7 +505,7 @@ class _StoreProductCard extends StatelessWidget {
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(backgroundColor: t.accent, padding: const EdgeInsets.symmetric(vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                         onPressed: () {
-                          context.read<AppState>().addToCart(product);
+                          ref.read(cartProvider.notifier).addToCart(product);
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${product.name} sepete eklendi'), duration: const Duration(seconds: 1)));
                         },
                         icon: const Icon(Icons.add_shopping_cart, size: 16),
@@ -579,18 +583,18 @@ class _Footer extends StatelessWidget {
   }
 }
 
-class _CartSheet extends StatefulWidget {
+class _CartSheet extends ConsumerStatefulWidget {
   const _CartSheet({required this.t});
   final StoreThemeData t;
 
   @override
-  State<_CartSheet> createState() => _CartSheetState();
+  ConsumerState<_CartSheet> createState() => _CartSheetState();
 }
 
-class _CartSheetState extends State<_CartSheet> {
+class _CartSheetState extends ConsumerState<_CartSheet> {
   bool _checkingOut = false;
 
-  Future<void> _checkout(AppState app) async {
+  Future<void> _checkout() async {
     final name = TextEditingController();
     final email = TextEditingController();
     final ok = await showDialog<bool>(
@@ -623,7 +627,7 @@ class _CartSheetState extends State<_CartSheet> {
     if (ok != true) return;
     setState(() => _checkingOut = true);
     try {
-      final orderNo = await app.checkoutGuest(name: name.text.trim(), email: email.text.trim());
+      final orderNo = await ref.read(cartProvider.notifier).checkoutGuest(name: name.text.trim(), email: email.text.trim());
       if (!mounted) return;
       Navigator.pop(context);
       showDialog(
@@ -645,8 +649,9 @@ class _CartSheetState extends State<_CartSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppState>();
-    final cart = app.cart;
+    final cart = ref.watch(cartProvider);
+    final grandTotal = ref.watch(cartGrandTotalProvider);
+    final cartNotifier = ref.read(cartProvider.notifier);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Column(
@@ -669,10 +674,10 @@ class _CartSheetState extends State<_CartSheet> {
                   return Row(
                     children: [
                       Expanded(child: Text(l.product.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
-                      _Stepper(qty: l.qty, onChanged: (q) => app.setQty(l.product.id, q)),
+                      _Stepper(qty: l.qty, onChanged: (q) => cartNotifier.setQty(l.product.id, q)),
                       const SizedBox(width: 10),
                       SizedBox(width: 90, child: Text(money(l.total, l.product.currencyCode), textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w700))),
-                      IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () => app.removeFromCart(l.product.id)),
+                      IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () => cartNotifier.removeFromCart(l.product.id)),
                     ],
                   );
                 },
@@ -683,7 +688,7 @@ class _CartSheetState extends State<_CartSheet> {
             children: [
               const Text('Toplam', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
               const Spacer(),
-              Text(money(app.cartGrandTotal), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+              Text(money(grandTotal), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
             ],
           ),
           const SizedBox(height: 14),
@@ -691,7 +696,7 @@ class _CartSheetState extends State<_CartSheet> {
             width: double.infinity,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(backgroundColor: widget.t.accent),
-              onPressed: (cart.isEmpty || _checkingOut) ? null : () => _checkout(app),
+              onPressed: (cart.isEmpty || _checkingOut) ? null : _checkout,
               icon: _checkingOut ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.shopping_bag),
               label: Text(_checkingOut ? 'Gönderiliyor…' : 'Siparişi Tamamla'),
             ),
