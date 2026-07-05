@@ -1,6 +1,6 @@
 # B2B
 
-Zensoft B2B bayi portalı için başlangıç deposu.
+B2B bayi portalı için başlangıç deposu.
 
 Bu depoda `RetailEX` projesindeki REST servis yaklaşımı B2B alanına uyarlanmıştır:
 
@@ -9,16 +9,6 @@ Bu depoda `RetailEX` projesindeki REST servis yaklaşımı B2B alanına uyarlanm
 - `logic.verify_login(username, password, firm_nr)` RPC yapısı
 - `public`, `logic`, `b2b` şema ayrımı
 - Frontend tarafı için küçük PostgREST TypeScript istemcisi
-
-## Canlı site inceleme notları
-
-Kontrol edilen adres: <https://b2b.zensoft.com.tr/>
-
-- Ana sayfa misafir kullanıcıyla açılıyor.
-- Login route'u `/login`.
-- Korumalı sayfalar örn. `/payments`, `/login?ReturnUrl=%2Fpayments` adresine yönleniyor.
-- Ürün/kategori görselleri `https://serviceb2b.gastropos.com.tr/uploads/...` servisinden geliyor.
-- Görünen ana modüller: ürünler, sipariş, ödeme, kampanyalar, duyurular, önceki/bekleyen siparişler, cari ekstresi, sevk adresleri, ödenmemiş faturalar, çek/senet ve faturalanmamış irsaliyeler.
 
 ## Hızlı başlangıç
 

@@ -14,7 +14,7 @@ ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS buyer_email text;
 INSERT INTO public.customers (company_id, code, title, customer_type, credit_limit)
 SELECT id, 'retail', 'Perakende / Misafir', 'individual', 0
 FROM public.companies
-WHERE code = 'ZENSOFT'
+WHERE code = 'EXFIN'
 ON CONFLICT (code) DO UPDATE SET title = EXCLUDED.title;
 
 -- Yeni nesneler/satırlar için anon yetkileri tazele.

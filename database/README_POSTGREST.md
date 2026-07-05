@@ -74,9 +74,9 @@ curl -X POST "http://localhost:3002/orders" \
   -d '{"order_no":"WEB-0001","customer_id":"<customer_uuid>","status":"open"}'
 ```
 
-## Canlı site eşlemesi
+## Modül / API eşlemesi
 
-| Canlı ekran/menü | REST karşılığı |
+| Ekran/menü | REST karşılığı |
 | --- | --- |
 | Ürünler / öne çıkan ürünler | `b2b.product_catalog` |
 | Kampanyalar | `public.campaigns`, `public.product_campaigns` |

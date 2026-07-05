@@ -261,7 +261,7 @@ CREATE INDEX IF NOT EXISTS idx_payments_customer_id ON public.payments(customer_
 CREATE INDEX IF NOT EXISTS idx_invoices_customer_id ON public.invoices(customer_id);
 
 INSERT INTO public.companies (code, name, currency_code)
-VALUES ('ZENSOFT', 'Zensoft Yazilim A.S.', 'TRY')
+VALUES ('EXFIN', 'EXFIN B2B', 'TRY')
 ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name;
 
 INSERT INTO public.roles (code, name, permissions)
@@ -275,7 +275,7 @@ SET name = EXCLUDED.name,
 INSERT INTO public.customers (company_id, code, title, customer_type, balance, credit_limit, average_maturity_days, past_due_balance)
 SELECT id, 'demo', 'Demo Bayi', 'company', 0, 100000, 30, 0
 FROM public.companies
-WHERE code = 'ZENSOFT'
+WHERE code = 'EXFIN'
 ON CONFLICT (code) DO UPDATE
 SET title = EXCLUDED.title,
     company_id = EXCLUDED.company_id;
@@ -313,16 +313,16 @@ INSERT INTO public.products (category_id, sku, name, currency_code, price, tax_r
 SELECT c.id, v.sku, v.name, v.currency_code, v.price, 20, v.stock_qty, v.image_url, v.is_featured, v.is_campaign, v.is_discounted, v.is_personal
 FROM (
   VALUES
-    ('electronics', 'ZEN-5D-MARK-II', 'Canon EOS 5D Mark II', 'TRY', 297.50, 15, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/10366KCY/v.jpg', true, false, false, false),
-    ('electronics', 'ZEN-MI-14-PRO', 'Mi Note 14 Pro Plus', 'USD', 23546.40, 8, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/ZEN-42/v.jpg', true, false, false, false),
-    ('electronics', 'ZEN-IPHONE-16S', 'IPhone 16S', 'TRY', 1.14, 5, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/ZEN-43/v.jpg', true, false, false, false),
-    ('electronics', 'ZEN-SAMSUNG-16-PRO', 'Samsung 16 Pro', 'TRY', 4709.28, 9, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/ZEN-44/v.jpg', true, false, false, false),
-    ('electronics', 'ZEN-ASUS-T-ROG', 'Asus T-ROG', 'TRY', 1300.00, 11, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/ZEN-45/v.jpg', true, false, false, false),
-    ('electronics', 'ZEN-HP-250-G10', 'HP 250 G10 Intel Core i5 1334U', 'TRY', 38474.51, 6, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/ZEN-1045/v.jpg', false, true, false, false),
-    ('electronics', 'ZEN-HP-255-G9', 'HP 255 G9 AMD Ryzen 5 5625U', 'TRY', 32318.59, 6, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/ZEN-47/v.jpg', false, true, false, false),
-    ('electronics', 'ZEN-APPLE-BT-KB', 'Apple Bluetooth Klavye', 'TRY', 3590.95, 20, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/21784KCY/v.jpg', false, false, true, false),
-    ('home-life', 'ZEN-VESTEL-SUPURGE', 'Vestel Dikey Supurge', 'TRY', 3839.83, 14, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/21781KCY/v.jpg', false, false, true, false),
-    ('electronics', 'ZEN-MSI-GAMING-PRO', 'Msi Gaming Pro', 'TRY', 5337.18, 10, 'https://serviceb2b.gastropos.com.tr/uploads/images/90/stok/21794KCY/v.jpg', false, false, false, true)
+    ('electronics', 'EXF-5D-MARK-II', 'Canon EOS 5D Mark II', 'TRY', 297.50, 15, NULL, true, false, false, false),
+    ('electronics', 'EXF-MI-14-PRO', 'Mi Note 14 Pro Plus', 'USD', 23546.40, 8, NULL, true, false, false, false),
+    ('electronics', 'EXF-IPHONE-16S', 'IPhone 16S', 'TRY', 1.14, 5, NULL, true, false, false, false),
+    ('electronics', 'EXF-SAMSUNG-16-PRO', 'Samsung 16 Pro', 'TRY', 4709.28, 9, NULL, true, false, false, false),
+    ('electronics', 'EXF-ASUS-T-ROG', 'Asus T-ROG', 'TRY', 1300.00, 11, NULL, true, false, false, false),
+    ('electronics', 'EXF-HP-250-G10', 'HP 250 G10 Intel Core i5 1334U', 'TRY', 38474.51, 6, NULL, false, true, false, false),
+    ('electronics', 'EXF-HP-255-G9', 'HP 255 G9 AMD Ryzen 5 5625U', 'TRY', 32318.59, 6, NULL, false, true, false, false),
+    ('electronics', 'EXF-APPLE-BT-KB', 'Apple Bluetooth Klavye', 'TRY', 3590.95, 20, NULL, false, false, true, false),
+    ('home-life', 'EXF-VESTEL-SUPURGE', 'Vestel Dikey Supurge', 'TRY', 3839.83, 14, NULL, false, false, true, false),
+    ('electronics', 'EXF-MSI-GAMING-PRO', 'Msi Gaming Pro', 'TRY', 5337.18, 10, NULL, false, false, false, true)
 ) AS v(category_code, sku, name, currency_code, price, stock_qty, image_url, is_featured, is_campaign, is_discounted, is_personal)
 JOIN public.categories c ON c.code = v.category_code
 ON CONFLICT (sku) DO UPDATE
