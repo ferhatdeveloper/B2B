@@ -63,8 +63,12 @@ class _StorefrontShellState extends ConsumerState<StorefrontShell> {
     final cols = EllaLayout.productCols(width);
     final filtered = _categorySlug != null || _search.isNotEmpty;
 
+    final base = Theme.of(context);
     return Theme(
-      data: Theme.of(context).copyWith(fontFamily: 'Spartan'),
+      data: base.copyWith(
+        textTheme: base.textTheme.apply(fontFamily: 'Spartan'),
+        primaryTextTheme: base.primaryTextTheme.apply(fontFamily: 'Spartan'),
+      ),
       child: Scaffold(
         backgroundColor: t.scaffoldBg,
         body: Column(
